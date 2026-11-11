@@ -211,8 +211,9 @@ function bootstrap(): void {
       const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(-88.5, worldLayout.terrainHeight(-92, -65) + 1.6, -65)) < 4.5;
       const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, worldLayout.policeCarPosition()) < 5.5;
       hud.showInteraction(note ? '[E] Прочитать записку' : nearStation ? '[E] Включить подстанцию' : nearCar ? '[E] Уехать на полицейской машине' : '');
-      const movedDistance = Vector3.DistanceSquared(camera.position, previousPlayerPosition);
-      const isMoving = movedDistance > .0008;
+      const dx = camera.position.x - previousPlayerPosition.x;
+      const dz = camera.position.z - previousPlayerPosition.z;
+      const isMoving = grounded && dx * dx + dz * dz > .0008;
       previousPlayerPosition.copyFrom(camera.position);
       twigCooldown = Math.max(0, twigCooldown - dt);
       let playerNoise = isMoving ? (canSprint ? 2 : 1) : 0;
