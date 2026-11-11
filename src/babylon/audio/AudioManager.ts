@@ -36,6 +36,8 @@ export class AudioManager {
   private sirenGain: GainNode | null = null;
   private sirenOscillator: OscillatorNode | null = null;
   private sirenLfo: OscillatorNode | null = null;
+  private night = false;
+  private chasing = false;
 
   constructor(private readonly scene: Scene) {
     for (const [id, url] of Object.entries(FILES)) {
@@ -130,9 +132,22 @@ export class AudioManager {
     if (this.sirenGain) this.sirenGain.gain.setTargetAtTime(Math.max(0, Math.min(.5, volume)) * this.master, this.context!.currentTime, .08);
   }
 
+  setNightState(night: boolean): void {
+    if (this.night === night) return;
+    this.night = night;
+    const ambience = this.sounds.get('ambience');
+    if (ambience) ambience.setVolume(this.master * (night ? .42 : .24));
+    this.updateDroneVolume();
+  }
+
   setChaseState(chasing: boolean): void {
+    this.chasing = chasing;
+    this.updateDroneVolume();
+  }
+
+  private updateDroneVolume(): void {
     const drone = this.sounds.get('drone');
-    if (drone) drone.setVolume(this.master * (chasing ? .52 : .22));
+    if (drone) drone.setVolume(this.master * (this.chasing ? .58 : this.night ? .32 : .12));
   }
 
   setHeartbeat(active: boolean): void {
@@ -156,7 +171,7 @@ export class AudioManager {
   setMasterVolume(volume: number): void {
     this.master = Math.max(0, Math.min(1, volume));
     for (const [id, sound] of this.sounds) {
-      const base = id === 'ambience' ? .34 : id === 'drone' ? .22 : id === 'wind' ? .2 : id === 'heartbeat' ? .5 : .7;
+      const base = id === 'ambience' ? (this.night ? .42 : .24) : id === 'drone' ? (this.chasing ? .58 : this.night ? .32 : .12) : id === 'wind' ? .2 : id === 'heartbeat' ? .5 : .7;
       sound.setVolume(base * this.master);
     }
   }
