@@ -61,7 +61,7 @@ export class Jumpscare {
       const right = MeshBuilder.CreateCylinder('scare-right-talon-' + i, { height: .55, diameterTop: 0, diameterBottom: .07, tessellation: 5 }, scene);
       right.parent = this.rightClaw; right.position.set(i * .06, 0, 0); right.rotation.set(.8, 0, .6); right.material = bone; right.isPickable = false;
     }
-    const light = new PointLight('scare-red-light', TransformNode ? this.root.position.clone() : this.root.position, scene);
+    const light = new PointLight('scare-red-light', this.root.position.clone(), scene);
     light.parent = this.root; light.position.set(0, .1, .8); light.diffuse = new Color3(1, .02, .005); light.intensity = 4.5; light.range = 4.5;
   }
 
