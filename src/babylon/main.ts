@@ -138,7 +138,8 @@ function bootstrap(): void {
           }
         } else if (!state.substationPowered && Vector3.Distance(camera.position, new Vector3(-87, 1, -61)) < 4.5) {
           state.substationPowered = true;
-          hud.notify('Подстанция запущена. Зарядка гаджетов ускорена.');
+          worldLayout.activateSubstation();
+          hud.notify('Подстанция запущена. Прожекторы города включены, радар перезаряжается быстрее.');
         } else if (state.notesFound >= 10 && Vector3.Distance(camera.position, new Vector3(0, 1, 3)) < 5.5) {
           state.phase = 'won';
           showMenu('Вы спаслись', 'Играть снова');
