@@ -39,6 +39,10 @@ export class Gadgets {
     this.state.radarReadyAt = this.state.radarUntil + 25000;
     return true;
   }
+  updateFlashlight(monsterNear: boolean): void {
+    if (!this.state.flashlightOn) { this.flashlight.intensity = 0; return; }
+    this.flashlight.intensity = monsterNear && Math.random() <= .18 ? 1.2 : 5.8;
+  }
   update(dt: number, now: number): void {
     if (!this.state.substationPowered) return;
     const reduction = dt * 1000;
