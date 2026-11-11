@@ -6,6 +6,7 @@ const FILES = {
   ambience: CC0 + 'horror-ambience-dark-50.mp3',
   drone: CC0 + 'horror-drone-25.mp3',
   stinger: CC0 + 'horror-stinger-54.mp3',
+  flash: CC0 + 'office-camera-08.mp3',
   heartbeat: CC0 + 'horror-heartbeat-73.mp3',
   creak: CC0 + 'horror-creak-61.mp3',
   growl: CC0 + 'horror-growl-11.mp3',
@@ -81,7 +82,7 @@ export class AudioManager {
   playEvent(event: EventName, intensity = 1): void {
     const ids: Record<EventName, string> = {
       step: 'footsteps', twig: 'twig', roar: 'growl', whisper: 'wind',
-      heartbeat: 'heartbeat', flash: '', jumpscare: 'stinger', siren: '',
+      heartbeat: 'heartbeat', flash: 'flash', jumpscare: 'stinger', siren: '',
       thunder: 'thunder', creak: 'creak',
     };
     const id = ids[event];
