@@ -9,6 +9,7 @@ import { createGameState } from './game/GameState';
 import { NotesManager } from './game/NotesManager';
 import { Gadgets } from './game/Gadgets';
 import { FirstPersonEquipment } from './game/FirstPersonEquipment';
+import { BodycamPostProcess } from './game/BodycamPostProcess';
 import { SaveManager } from './game/SaveManager';
 import { GameSettings } from './game/GameSettings';
 import { Monster } from './entities/Monster';
@@ -29,6 +30,7 @@ function bootstrap(): void {
     const pipeline = new DefaultRenderingPipeline('ponr-postprocess', true, scene, [camera]);
     pipeline.bloomEnabled = true; pipeline.bloomThreshold = .72; pipeline.bloomWeight = .75; pipeline.bloomKernel = 64;
     pipeline.fxaaEnabled = true; pipeline.imageProcessingEnabled = false;
+    const bodycam = new BodycamPostProcess(camera, engine);
     const state = createGameState();
     const notes = new NotesManager(scene, worldLayout);
     const gadgets = new Gadgets(scene, camera, state);
@@ -241,6 +243,7 @@ function bootstrap(): void {
 
       audio.setSirenVolume(worldLayout.updatePoliceCar(now, camera.position));
       const distance = Vector3.Distance(monster.mesh.position, camera.position);
+      bodycam.setFear(monster.mesh.isEnabled() ? Math.max(0, 1 - distance / 58) * .85 : 0);
       gadgets.updateFlashlight(monster.mesh.isEnabled() && distance < 22);
       if (!jumpscare.active && monster.mode === 'chase' && distance < 2.3) {
         jumpscare.start();
@@ -262,10 +265,10 @@ function bootstrap(): void {
     });
 
     engine.runRenderLoop(() => scene.render());
-    if (import.meta.env.DEV) Object.assign(window, { __ponrBabylon: { engine, scene, camera, state, notes, monster, phantom, jumpscare, audio, assets, gadgets, settings, equipment, pipeline } });
+    if (import.meta.env.DEV) Object.assign(window, { __ponrBabylon: { engine, scene, camera, state, notes, monster, phantom, jumpscare, audio, assets, gadgets, settings, equipment, pipeline, bodycam } });
     window.addEventListener('beforeunload', () => {
       save.save(state); equipment.dispose(); gadgets.dispose(); monster.dispose(); phantom.dispose(); jumpscare.dispose();
-      audio.dispose(); pipeline.dispose(); scene.dispose(); engine.dispose();
+      audio.dispose(); bodycam.dispose(); pipeline.dispose(); scene.dispose(); engine.dispose();
     });
   } catch (error) {
     console.error(error);
