@@ -124,8 +124,7 @@ function bootstrap(): void {
         } else hud.notify('Радар перезаряжается');
       }
       if (e.code === 'KeyE') {
-        if (grounded) camera.position.y = worldLayout.terrainHeight(camera.position.x, camera.position.z) + 1.8;
-      const note = notes.nearest(camera.position, 3.6);
+        const note = notes.nearest(camera.position, 3.6);
         if (note) {
           hud.notify(notes.collect(note), 5200);
           audio.playEvent('twig', .2);
@@ -177,6 +176,7 @@ function bootstrap(): void {
         if (camera.position.y <= floorY) { camera.position.y = floorY; jumpVelocity = 0; grounded = true; }
       }
 
+      if (grounded) camera.position.y = worldLayout.terrainHeight(camera.position.x, camera.position.z) + 1.8;
       const note = notes.nearest(camera.position, 3.6);
       const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(-87, 1, -61)) < 4.5;
       const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, worldLayout.policeCarPosition()) < 5.5;
@@ -199,7 +199,7 @@ function bootstrap(): void {
 
       audio.setSirenVolume(worldLayout.updatePoliceCar(now, camera.position));
       const distance = Vector3.Distance(monster.mesh.position, camera.position);
-      if (!jumpscare.active && monster.mode === 'chase' && distance < 2.2) {
+      if (!jumpscare.active && monster.mode === 'chase' && distance < 2.3) {
         jumpscare.start();
         audio.playEvent('jumpscare', 1);
         monster.mesh.setEnabled(false);
