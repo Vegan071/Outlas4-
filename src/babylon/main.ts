@@ -1,5 +1,5 @@
 import '../styles.css';
-import { Color3, Vector3 } from '@babylonjs/core';
+import { Color3, DefaultRenderingPipeline, Vector3 } from '@babylonjs/core';
 import { createEngine } from './engine/createEngine';
 import { createWorld } from './world/createWorld';
 import { createPlayer } from './player/createPlayer';
@@ -26,6 +26,9 @@ function bootstrap(): void {
     const { engine, scene, canvas } = createEngine();
     const worldLayout = createWorld(scene);
     const camera = createPlayer(scene, canvas);
+    const pipeline = new DefaultRenderingPipeline('ponr-postprocess', true, scene, [camera]);
+    pipeline.bloomEnabled = true; pipeline.bloomThreshold = .72; pipeline.bloomWeight = .75; pipeline.bloomKernel = 64;
+    pipeline.fxaaEnabled = true; pipeline.imageProcessingEnabled = false;
     const state = createGameState();
     const notes = new NotesManager(scene, worldLayout);
     const gadgets = new Gadgets(scene, camera, state);
@@ -36,7 +39,7 @@ function bootstrap(): void {
     const phantom = new Phantom(scene, camera);
     const jumpscare = new Jumpscare(scene, camera);
     const audio = new AudioManager(scene);
-    const settings = new GameSettings(engine, camera, audio);
+    const settings = new GameSettings(engine, camera, audio, pipeline);
     const assets = new AssetLoader(scene);
     const save = new SaveManager();
     const hud = new Hud();
@@ -257,10 +260,10 @@ function bootstrap(): void {
     });
 
     engine.runRenderLoop(() => scene.render());
-    if (import.meta.env.DEV) Object.assign(window, { __ponrBabylon: { engine, scene, camera, state, notes, monster, phantom, jumpscare, audio, assets, gadgets, settings, equipment } });
+    if (import.meta.env.DEV) Object.assign(window, { __ponrBabylon: { engine, scene, camera, state, notes, monster, phantom, jumpscare, audio, assets, gadgets, settings, equipment, pipeline } });
     window.addEventListener('beforeunload', () => {
       save.save(state); equipment.dispose(); gadgets.dispose(); monster.dispose(); phantom.dispose(); jumpscare.dispose();
-      audio.dispose(); scene.dispose(); engine.dispose();
+      audio.dispose(); pipeline.dispose(); scene.dispose(); engine.dispose();
     });
   } catch (error) {
     console.error(error);
