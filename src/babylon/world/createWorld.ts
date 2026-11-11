@@ -302,11 +302,12 @@ export function createWorld(scene: Scene): WorldLayout {
 
   // Blood moon and a lightweight thin-instance ash field, matching the original night sky.
   const moonMat = material(scene, 'blood-moon-material', new Color3(.55, .025, .012));
-  moonMat.emissiveColor = new Color3(.55, .025, .012);
+  moonMat.emissiveColor = new Color3(.55, .025, .012); moonMat.disableLighting = true; moonMat.fogEnabled = false;
   const moon = MeshBuilder.CreateSphere('blood-moon', { diameter: 36, segments: 16 }, scene);
   moon.material = moonMat; moon.position.set(-180, -30, -220); moon.isPickable = false;
   const ash = MeshBuilder.CreateSphere('ash-particles', { diameter: .15, segments: 3 }, scene);
-  ash.material = material(scene, 'ash-material', new Color3(.42, .42, .42));
+  const ashMaterial = material(scene, 'ash-material', new Color3(.42, .42, .42)); ashMaterial.alpha = .5; ashMaterial.disableLighting = true;
+  ash.material = ashMaterial;
   const ashRandom = mulberry32(0x415348);
   const ashMatrices = new Float32Array(600 * 16);
   const ashState: { x: number; y: number; z: number }[] = [];
@@ -318,6 +319,8 @@ export function createWorld(scene: Scene): WorldLayout {
   ash.thinInstanceSetBuffer('matrix', ashMatrices, 16, false);
   ash.isPickable = false; ash.alwaysSelectAsActiveMesh = true;
 
+  let lowSpec = false;
+  const setLowSpec = (enabled: boolean): void => { lowSpec = enabled; ash.setEnabled(!enabled); };
   const updateAtmosphere = (delta: number, progress: number, player: Vector3): void => {
     const p = Math.max(0, Math.min(1, progress));
     const sunsetSky = new Color3(1, .467, .2), nightSky = new Color3(.012, .012, .027);
@@ -335,15 +338,17 @@ export function createWorld(scene: Scene): WorldLayout {
       if (mat) mat.diffuseColor.copyFrom(bulb);
     }
     for (const light of streetLights) light.intensity = (substationPowered ? 6.8 : 3.5) * p;
-    ash.position.set(player.x, terrainHeight(player.x, player.z), player.z);
-    for (let i = 0; i < ashState.length; i++) {
-      const particle = ashState[i];
-      particle.y -= delta * .8;
-      if (particle.y < 0) particle.y = 22;
-      ashMatrices.set(Matrix.Translation(particle.x, particle.y, particle.z).m, i * 16);
+    if (!lowSpec) {
+      ash.position.set(player.x, terrainHeight(player.x, player.z), player.z);
+      for (let i = 0; i < ashState.length; i++) {
+        const particle = ashState[i];
+        particle.y -= delta * .8;
+        if (particle.y < 0) particle.y = 22;
+        ashMatrices.set(Matrix.Translation(particle.x, particle.y, particle.z).m, i * 16);
+      }
+      ash.thinInstanceBufferUpdated('matrix');
     }
-    ash.thinInstanceBufferUpdated('matrix');
   };
 
-  return { trees, houses, cars, terrainHeight, updateAtmosphere, activateSubstation, spawnPoliceCar, updatePoliceCar, policeCarPosition, textures };
+  return { trees, houses, cars, terrainHeight, updateAtmosphere, activateSubstation, spawnPoliceCar, updatePoliceCar, policeCarPosition, setLowSpec, textures };
 }
