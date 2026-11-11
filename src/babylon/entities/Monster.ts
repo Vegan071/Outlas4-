@@ -113,8 +113,20 @@ export class Monster {
     const rightArm = makeLimb('wendigo-right-arm', .58, .42, 1.65, .14);
     const leftLeg = makeLimb('wendigo-left-leg', -.23, -.95, 1.5, .17);
     const rightLeg = makeLimb('wendigo-right-leg', .23, -.95, 1.5, .17);
+    for (const side of [-1, 1]) {
+      const arm = side < 0 ? leftArm : rightArm;
+      const leg = side < 0 ? leftLeg : rightLeg;
+      for (let claw = -1; claw <= 1; claw++) {
+        const handClaw = MeshBuilder.CreateCylinder('wendigo-hand-claw-' + side + '-' + claw, { height: .28, diameterTop: 0, diameterBottom: .055, tessellation: 5 }, scene);
+        handClaw.parent = arm; handClaw.position.set(claw * .09, -.72, .12); handClaw.rotation.x = Math.PI / 2.2; handClaw.material = bone; handClaw.isPickable = false;
+        const footClaw = MeshBuilder.CreateCylinder('wendigo-foot-claw-' + side + '-' + claw, { height: .22, diameterTop: 0, diameterBottom: .06, tessellation: 5 }, scene);
+        footClaw.parent = leg; footClaw.position.set(claw * .09, -.7, .18); footClaw.rotation.x = Math.PI / 2.2; footClaw.material = bone; footClaw.isPickable = false;
+      }
+    }
     const heart = MeshBuilder.CreateSphere('wendigo-heart', { diameter: .18, segments: 6 }, scene);
-    heart.parent = this.mesh; heart.position.set(0, .1, .38); heart.material = this.material; heart.isPickable = false;
+    const heartMat = new StandardMaterial('wendigo-heart-material', scene);
+    heartMat.diffuseColor = new Color3(.45, .005, .012); heartMat.emissiveColor = new Color3(.65, .005, .01);
+    heart.parent = this.mesh; heart.position.set(0, .1, .38); heart.material = heartMat; heart.isPickable = false;
     this.parts = { head, jaw, leftArm, rightArm, leftLeg, rightLeg, heart };
     this.initSteering(world);
     for (const side of [-1, 1]) {
@@ -155,7 +167,7 @@ export class Monster {
     this.mode = 'patrol'; this.patrolWait = 0; this.pickPatrolTarget(player);
   }
 
-  stun(seconds: number): void { this.mode = 'stunned'; this.stunTimer = seconds; }
+  stun(seconds: number): void { this.mode = 'stunned'; this.stunTimer = seconds; this.vehicle.velocity.set(0, 0, 0); }
 
   private pickPatrolTarget(player: Vector3): void {
     const angle = Math.random() * Math.PI * 2, distance = 25 + Math.random() * 55;
