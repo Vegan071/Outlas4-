@@ -73,8 +73,8 @@ function bootstrap(): void {
       hud.update(state);
     }
 
-    const showMenu = (heading: string, button: string): void => {
-      audio.suspend();
+    const showMenu = (heading: string, button: string, preserveStinger = false): void => {
+      audio.suspend(preserveStinger);
       if (menu) menu.style.display = 'flex';
       if (title) title.textContent = heading;
       if (start) start.textContent = button;
@@ -249,7 +249,7 @@ function bootstrap(): void {
         scareResolved = true;
         state.health = 0;
         state.phase = 'lost';
-        showMenu('Вендиго настиг вас', 'Попробовать снова');
+        showMenu('Вендиго настиг вас', 'Попробовать снова', true);
       }
       if (camera.position.y < -5) {
         state.health = 0; state.phase = 'lost';
