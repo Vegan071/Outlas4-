@@ -263,11 +263,15 @@ export function createWorld(scene: Scene): WorldLayout {
   const spawnPoliceCar = (): Vector3 => {
     if (policeCar.isEnabled()) return policeCar.position.clone();
     let x = 0, z = 0;
-    switch (Math.floor(random() * 4)) {
-      case 0: x = 120 + random() * 85; z = -100 + random() * 200; break;
-      case 1: x = -120 - random() * 85; z = -100 + random() * 200; break;
-      case 2: x = -90 + random() * 180; z = 240 + random() * 65; break;
-      default: x = -90 + random() * 180; z = -240 - random() * 65; break;
+    for (let attempt = 0; attempt < 80; attempt++) {
+      switch (Math.floor(random() * 4)) {
+        case 0: x = 120 + random() * 85; z = -100 + random() * 200; break;
+        case 1: x = -120 - random() * 85; z = -100 + random() * 200; break;
+        case 2: x = -90 + random() * 180; z = 240 + random() * 65; break;
+        default: x = -90 + random() * 180; z = -240 - random() * 65; break;
+      }
+      const nearTree = trees.some(tree => Math.hypot(tree.x - x, tree.z - z) < 11);
+      if (!nearTree && !Object.values(POI).some(p => Math.hypot(p.x - x, p.z - z) < 20)) break;
     }
     policeCar.position.set(x, terrainHeight(x, z), z);
     policeCar.rotation.y = random() * Math.PI * 2;
