@@ -36,7 +36,7 @@ export class Gadgets {
   radar(now: number): boolean {
     if (now < this.state.radarReadyAt) return false;
     this.state.radarUntil = now + 5000;
-    this.state.radarReadyAt = this.state.radarUntil + (this.state.substationPowered ? 12500 : 25000);
+    this.state.radarReadyAt = this.state.radarUntil + 25000;
     return true;
   }
   update(dt: number, now: number): void {
