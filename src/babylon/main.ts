@@ -160,26 +160,24 @@ function bootstrap(): void {
         } else hud.notify('Радар перезаряжается');
       }
       if (e.code === 'KeyE') {
-        const note = notes.nearest(camera.position, 3.6, camera.getForwardRay().direction);
-        if (note) {
-          hud.notify(notes.collect(note), 5200);
-          audio.playEvent('twig', .2);
-          state.notesFound = notes.count;
-          hud.update(state);
-          save.save(state);
-          if (state.notesFound === 10) {
-            worldLayout.spawnPoliceCar();
-            audio.startSiren();
-            hud.notify('Все десять записок собраны. Ищите полицейскую сирену на окраине!', 5000);
-          }
-        } else if (!state.substationPowered && Vector3.Distance(camera.position, new Vector3(-88.5, worldLayout.terrainHeight(-92, -65) + 1.6, -65)) < 4.5) {
-          state.substationPowered = true;
-          worldLayout.activateSubstation();
-          save.save(state);
+        const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, worldLayout.policeCarPosition()) < 5.5;
+        const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(-88.5, worldLayout.terrainHeight(-92, -65) + 1.6, -65)) < 4.2;
+        if (nearCar) {
+          state.phase = 'won'; showMenu('Вы спаслись', 'Играть снова');
+        } else if (nearStation) {
+          state.substationPowered = true; worldLayout.activateSubstation(); save.save(state);
+          audio.playEvent('creak', .35);
           hud.notify('Подстанция запущена. Прожекторы города включены, радар перезаряжается быстрее.');
-        } else if (state.notesFound >= 10 && Vector3.Distance(camera.position, worldLayout.policeCarPosition()) < 5.5) {
-          state.phase = 'won';
-          showMenu('Вы спаслись', 'Играть снова');
+        } else {
+          const note = notes.nearest(camera.position, 3.6, camera.getForwardRay().direction);
+          if (note) {
+            hud.notify(notes.collect(note), 5200); audio.playEvent('twig', .2);
+            state.notesFound = notes.count; hud.update(state); save.save(state);
+            if (state.notesFound === 10) {
+              worldLayout.spawnPoliceCar(); audio.startSiren();
+              hud.notify('Все десять записок собраны. Ищите полицейскую сирену на окраине!', 5000);
+            }
+          }
         }
       }
     });
@@ -217,9 +215,9 @@ function bootstrap(): void {
 
       if (grounded) camera.position.y = worldLayout.terrainHeight(camera.position.x, camera.position.z) + 2.0;
       const note = notes.nearest(camera.position, 3.6, camera.getForwardRay().direction);
-      const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(-88.5, worldLayout.terrainHeight(-92, -65) + 1.6, -65)) < 4.5;
+      const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(-88.5, worldLayout.terrainHeight(-92, -65) + 1.6, -65)) < 4.2;
       const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, worldLayout.policeCarPosition()) < 5.5;
-      hud.showInteraction(note ? '[E] Прочитать записку' : nearStation ? '[E] Включить подстанцию' : nearCar ? '[E] Уехать на полицейской машине' : '');
+      hud.showInteraction(nearCar ? '[E] Уехать на полицейской машине' : nearStation ? '[E] Включить подстанцию' : note ? '[E] Прочитать записку' : '');
       const dx = camera.position.x - previousPlayerPosition.x;
       const dz = camera.position.z - previousPlayerPosition.z;
       const isMoving = grounded && dx * dx + dz * dz > .0008;
