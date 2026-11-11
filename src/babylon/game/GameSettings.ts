@@ -2,6 +2,7 @@ import type { Engine } from '@babylonjs/core/Engines/engine';
 import type { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
 import type { AudioManager } from '../audio/AudioManager';
 import type { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline';
+import type { WorldLayout } from '../world/createWorld';
 
 interface SettingsData { potato: boolean; bloom: boolean; sens: number; volume: number }
 const KEY = 'ponr-settings-v1';
@@ -9,7 +10,7 @@ const defaults: SettingsData = { potato: false, bloom: true, sens: 1, volume: 1 
 
 export class GameSettings {
   private data: SettingsData = { ...defaults };
-  constructor(private engine: Engine, private camera: UniversalCamera, private audio: AudioManager, private pipeline: DefaultRenderingPipeline) {
+  constructor(private engine: Engine, private camera: UniversalCamera, private audio: AudioManager, private pipeline: DefaultRenderingPipeline, private world: WorldLayout) {
     try {
       const saved = JSON.parse(localStorage.getItem(KEY) || 'null') as Partial<SettingsData> | null;
       if (saved) {
@@ -45,6 +46,8 @@ export class GameSettings {
   private apply(): void {
     this.engine.setHardwareScalingLevel(this.data.potato ? 1.5 : 1);
     this.pipeline.bloomEnabled = this.data.bloom && !this.data.potato;
+    this.camera.maxZ = this.data.potato ? 200 : 260;
+    this.world.setLowSpec(this.data.potato);
     this.engine.resize();
     this.camera.angularSensibility = 2600 / this.data.sens;
     this.audio.setMasterVolume(this.data.volume);
