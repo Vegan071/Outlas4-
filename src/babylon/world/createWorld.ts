@@ -19,6 +19,7 @@ export interface WorldLayout {
   spawnPoliceCar: () => Vector3;
   updatePoliceCar: (time: number, player: Vector3) => number;
   policeCarPosition: () => Vector3;
+  setLowSpec: (enabled: boolean) => void;
 }
 
 const POI = {
