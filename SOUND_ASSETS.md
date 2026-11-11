@@ -7,6 +7,7 @@ All listed files are served from SFXMint and are dedicated to the public domain 
 | Forest night ambience | [Night Forest Unease Haunted Ambience 50](https://sfxmint.com/sounds/horror-ambience-dark-50) |
 | Low tension bed | [Pulsing Dread Dark Horror Drone 25](https://sfxmint.com/sounds/horror-drone-25) |
 | Jumpscare | [Dissonant Orchestral-Style Horror Stinger Hit 54](https://sfxmint.com/sounds/horror-stinger-54) |
+| Flashbang / camera shutter | [Single DSLR Camera Shutter 08](https://sfxmint.com/sounds/office-camera-08) |
 | Proximity heartbeat | [Accelerating Panic Heartbeat 73](https://sfxmint.com/sounds/horror-heartbeat-73) |
 | Monster vocal | [Distant Monster Growl 11](https://sfxmint.com/sounds/horror-growl-11) |
 | Walking | [Walking Footsteps On Concrete 03](https://sfxmint.com/sounds/footsteps-concrete-03) |
