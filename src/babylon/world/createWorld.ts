@@ -134,7 +134,9 @@ export function createWorld(scene: Scene): WorldLayout {
       const house = { x, z, width, depth, height }; houses.push(house);
       makeBox(scene, 'building-roof-' + x + '-' + z, width + .35, .25, depth + .35, x, height + .12, z, roofMaterial);
       if (random() > .45) {
-        const graffiti = makeBox(scene, 'building-graffiti-' + x + '-' + z, .025, 2.5, 4, x + (x < 0 ? 1 : -1) * (width / 2 + .03), 2.4, z + (random() - .5) * 10, material(scene, 'graffiti-' + x + '-' + z, new Color3(.9, .9, .9)));
+        const graffitiMat = material(scene, 'graffiti-' + x + '-' + z, new Color3(.9, .9, .9));
+        graffitiMat.diffuseTexture = textures.graffiti; graffitiMat.opacityTexture = textures.graffiti;
+        const graffiti = makeBox(scene, 'building-graffiti-' + x + '-' + z, .025, 2.5, 4, x + (x < 0 ? 1 : -1) * (width / 2 + .03), 2.4, z + (random() - .5) * 10, graffitiMat);
         graffiti.isPickable = false;
       }
     }
