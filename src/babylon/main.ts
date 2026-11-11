@@ -116,12 +116,23 @@ function bootstrap(): void {
       }
       if (e.code === 'KeyQ') {
         if (gadgets.radar(now)) {
-          const target = state.notesFound >= 10
-            ? worldLayout.policeCarPosition()
-            : notes.nearest(camera.position, 100)?.mesh.position;
+          const nearestNote = notes.nearest(camera.position, 100);
+          const monsterDistance = monster.mesh.isEnabled() ? Vector3.Distance(camera.position, monster.mesh.position) : Infinity;
+          let target: Vector3 | undefined;
+          let signal = '';
+          if (monsterDistance < 100 && (state.notesFound >= 10 || !nearestNote || monsterDistance < Vector3.Distance(camera.position, nearestNote.mesh.position))) {
+            target = monster.mesh.position;
+            signal = 'КРАСНАЯ МЕТКА · ВЕНДИГО';
+          } else if (state.notesFound >= 10) {
+            target = worldLayout.policeCarPosition();
+            signal = 'СИНЯЯ МЕТКА · МАШИНА';
+          } else if (nearestNote) {
+            target = nearestNote.mesh.position;
+            signal = 'ЗЕЛЁНАЯ МЕТКА · ЗАПИСКА';
+          }
           if (target) {
             const delta = target.subtract(camera.position);
-            hud.notify('ЭМП: ' + Math.round(delta.length()) + ' м · ' + (delta.x > 2 ? 'справа' : delta.x < -2 ? 'слева' : 'впереди'));
+            hud.notify('ЭМП: ' + signal + ' · ' + Math.round(delta.length()) + ' м · ' + (delta.x > 2 ? 'справа' : delta.x < -2 ? 'слева' : 'впереди'), 3000);
           } else hud.notify('ЭМП: сигнал не обнаружен');
         } else hud.notify('Радар перезаряжается');
       }
