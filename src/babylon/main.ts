@@ -27,7 +27,7 @@ function bootstrap(): void {
     const state = createGameState();
     const notes = new NotesManager(scene, worldLayout);
     const gadgets = new Gadgets(scene, camera, state);
-    const monster = new Monster(scene, camera);
+    const monster = new Monster(scene, camera, worldLayout.terrainHeight);
     const phantom = new Phantom(scene, camera);
     const jumpscare = new Jumpscare(scene, camera);
     const audio = new AudioManager(scene);
@@ -105,7 +105,7 @@ function bootstrap(): void {
         if (gadgets.flashbang(now)) {
           flashPulseUntil = now + 180;
           audio.playEvent('flash', .9);
-          if (Vector3.Distance(monster.mesh.position, camera.position) < 22) {
+          if (Vector3.Distance(monster.mesh.position, camera.position) < 28) {
             monster.stun(4);
             audio.playEvent('roar', .8);
             hud.notify('Вспышка ослепила Вендиго — бегите!');
@@ -180,7 +180,7 @@ function bootstrap(): void {
       const movedDistance = Vector3.DistanceSquared(camera.position, previousPlayerPosition);
       const isMoving = movedDistance > .0008;
       previousPlayerPosition.copyFrom(camera.position);
-      const playerNoise = isMoving ? (canSprint ? 3 : 1) : 0;
+      const playerNoise = isMoving ? (canSprint ? 2 : 1) : 0;
       audio.setFootsteps(isMoving, canSprint);
       monster.update(dt, now, state.flashlightOn, canSprint, playerNoise);
       if (monster.mode !== lastMonsterMode) {
