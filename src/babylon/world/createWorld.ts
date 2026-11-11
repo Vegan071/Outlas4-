@@ -12,6 +12,7 @@ export interface WorldLayout {
   houses: WorldHouse[];
   cars: WorldCar[];
   terrainHeight: (x: number, z: number) => number;
+  updateAtmosphere: (delta: number, progress: number, player: Vector3) => void;
 }
 
 const POI = {
@@ -164,6 +165,8 @@ export function createWorld(scene: Scene): WorldLayout {
   // Streetlights and collision poles along the city road.
   const poleMat = material(scene, 'streetlight-metal', new Color3(.09, .09, .085));
   const bulbMat = material(scene, 'streetlight-bulb', new Color3(.24, .22, .17));
+  const streetLights: PointLight[] = [];
+  const streetBulbs: Mesh[] = [];
   for (let z = -150; z <= 150; z += 50) {
     for (const x of [-13, 13]) {
       const group = new TransformNode('streetlight-' + x + '-' + z, scene); group.position.set(x, 0, z);
@@ -172,9 +175,9 @@ export function createWorld(scene: Scene): WorldLayout {
       const arm = MeshBuilder.CreateCylinder('streetlight-arm', { height: 2.2, diameter: .12, tessellation: 6 }, scene);
       arm.parent = group; arm.position.set(x < 0 ? 1.1 : -1.1, 6.3, 0); arm.rotation.z = (x < 0 ? 1 : -1) * Math.PI / 2.5; arm.material = poleMat;
       const housing = makeBox(scene, 'streetlight-housing', .7, .2, .4, x < 0 ? 2 : -2, 6.8, 0, poleMat); housing.parent = group;
-      const bulb = makeBox(scene, 'streetlight-bulb', .5, .04, .25, x < 0 ? 2 : -2, 6.69, 0, bulbMat); bulb.parent = group;
+      const bulb = makeBox(scene, 'streetlight-bulb', .5, .04, .25, x < 0 ? 2 : -2, 6.69, 0, bulbMat); bulb.parent = group; streetBulbs.push(bulb);
       const light = new PointLight('streetlight-point-' + x + '-' + z, new Vector3(x + (x < 0 ? 2 : -2), 6.5, z), scene);
-      light.diffuse = new Color3(1, .78, .5); light.intensity = 0; light.range = 42;
+      light.diffuse = new Color3(1, .78, .5); light.intensity = 0; light.range = 42; streetLights.push(light);
     }
   }
 
@@ -242,5 +245,50 @@ export function createWorld(scene: Scene): WorldLayout {
   scene.fogMode = Scene.FOGMODE_EXP2; scene.fogDensity = .012; scene.fogColor = new Color3(.8, .35, .18);
   scene.clearColor.set(.8, .35, .18, 1);
 
-  return { trees, houses, cars, terrainHeight };
+  // Blood moon and a lightweight thin-instance ash field, matching the original night sky.
+  const moonMat = material(scene, 'blood-moon-material', new Color3(.55, .025, .012));
+  moonMat.emissiveColor = new Color3(.55, .025, .012);
+  const moon = MeshBuilder.CreateSphere('blood-moon', { diameter: 36, segments: 16 }, scene);
+  moon.material = moonMat; moon.position.set(-180, -30, -220); moon.isPickable = false;
+  const ash = MeshBuilder.CreateSphere('ash-particles', { diameter: .15, segments: 3 }, scene);
+  ash.material = material(scene, 'ash-material', new Color3(.42, .42, .42));
+  const ashRandom = mulberry32(0x415348);
+  const ashMatrices = new Float32Array(600 * 16);
+  const ashState: { x: number; y: number; z: number }[] = [];
+  for (let i = 0; i < 600; i++) {
+    const p = { x: (ashRandom() - .5) * 110, y: ashRandom() * 22, z: (ashRandom() - .5) * 110 };
+    ashState.push(p);
+    ashMatrices.set(Matrix.Translation(p.x, p.y, p.z).m, i * 16);
+  }
+  ash.thinInstanceSetBuffer('matrix', ashMatrices, 16, false);
+  ash.isPickable = false; ash.alwaysSelectAsActiveMesh = true;
+
+  const updateAtmosphere = (delta: number, progress: number, player: Vector3): void => {
+    const p = Math.max(0, Math.min(1, progress));
+    const sunsetSky = new Color3(1, .467, .2), nightSky = new Color3(.012, .012, .027);
+    const sunsetAmbient = new Color3(1, .667, .4), nightAmbient = new Color3(.071, .078, .14);
+    const sky = Color3.Lerp(sunsetSky, nightSky, p);
+    scene.fogColor.copyFrom(sky); scene.clearColor.set(sky.r, sky.g, sky.b, 1);
+    scene.fogDensity = .012 + .015 * p;
+    ambient.diffuse.copyFrom(Color3.Lerp(sunsetAmbient, nightAmbient, p));
+    ambient.intensity = .85 - .52 * p;
+    sun.intensity = 1.1 * (1 - p);
+    moon.position.y = -30 + p * 125;
+    const bulb = Color3.Lerp(new Color3(.4, .4, .4), new Color3(1, 1, .93), p);
+    for (const mesh of streetBulbs) {
+      const mat = mesh.material as StandardMaterial | null;
+      if (mat) mat.diffuseColor.copyFrom(bulb);
+    }
+    for (const light of streetLights) light.intensity = (p > .98 ? 3.5 : 3.5 * p);
+    ash.position.set(player.x, terrainHeight(player.x, player.z), player.z);
+    for (let i = 0; i < ashState.length; i++) {
+      const particle = ashState[i];
+      particle.y -= delta * .8;
+      if (particle.y < 0) particle.y = 22;
+      ashMatrices.set(Matrix.Translation(particle.x, particle.y, particle.z).m, i * 16);
+    }
+    ash.thinInstanceBufferUpdated('matrix');
+  };
+
+  return { trees, houses, cars, terrainHeight, updateAtmosphere };
 }
