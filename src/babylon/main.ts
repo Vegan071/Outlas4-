@@ -189,7 +189,7 @@ function bootstrap(): void {
 
       const canSprint = sprinting && state.stamina > 0;
       if (canSprint) state.stamina = Math.max(0, state.stamina - dt * 25);
-      else state.stamina = Math.min(100, state.stamina + dt * (state.substationPowered ? 22 : 15));
+      else state.stamina = Math.min(100, state.stamina + dt * (state.substationPowered ? 30 : 15));
       camera.speed = canSprint ? 20 : 7.8;
 
       // Explicit jump arc is layered over Babylon's collision-enabled first-person camera.
