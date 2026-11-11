@@ -19,9 +19,9 @@ function bootstrap():void{
   const gadgets=new Gadgets(scene,camera,state),monster=new Monster(scene,camera),audio=new AudioManager(scene),assets=new AssetLoader(scene),save=new SaveManager(),hud=new Hud();
   const menu=document.getElementById('menu'),start=document.getElementById('start-btn'),fps=document.getElementById('fps-counter');
   let previous=performance.now(),sprinting=false;
-  const startGame=():void=>{state.phase='playing';if(menu)menu.style.display='none';canvas.requestPointerLock?.();canvas.focus();};
+  const startGame=():void=>{state.phase='playing';if(menu)menu.style.display='none';const layer=document.getElementById('ui-layer');if(layer)layer.style.display='block';canvas.requestPointerLock?.();canvas.focus();};
   start?.addEventListener('click',startGame);
-  document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==canvas&&state.phase==='playing'){state.phase='paused';if(menu)menu.style.display='flex';}});
+  document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==canvas&&state.phase==='playing'){state.phase='paused';if(menu)menu.style.display='flex';const layer=document.getElementById('ui-layer');if(layer)layer.style.display='none';}});
   document.addEventListener('keydown',(e)=>{
    if(e.code==='Escape'&&state.phase==='playing'){state.phase='paused';if(menu)menu.style.display='flex';}
    if(state.phase!=='playing')return;
@@ -59,6 +59,7 @@ function bootstrap():void{
    const now=performance.now(),dt=Math.min((now-previous)/1000,.05);previous=now;
    if(fps)fps.textContent='FPS: '+Math.round(engine.getFps());
    if(state.phase!=='playing')return;
+   hud.update(state);
    if(sprinting&&state.stamina>0){state.stamina=Math.max(0,state.stamina-dt*25);camera.speed=.39;}
    else{state.stamina=Math.min(100,state.stamina+dt*(state.substationPowered?22:15));camera.speed=.22;}
    const note=notes.nearest(camera.position,3.6);
