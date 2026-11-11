@@ -72,7 +72,8 @@ function bootstrap(): void {
       if (layer) layer.style.display = 'block';
       canvas.requestPointerLock?.();
       canvas.focus();
-      if (!monsterSpawned) { monster.spawn(camera.position); monsterSpawned = true; }
+      void audio.unlock();
+      audio.startAmbience();
     };
     start?.addEventListener('click', startGame);
 
@@ -100,8 +101,10 @@ function bootstrap(): void {
       if (e.code === 'KeyR') {
         if (gadgets.flashbang(now)) {
           flashPulseUntil = now + 180;
+          audio.playEvent('flash', .9);
           if (Vector3.Distance(monster.mesh.position, camera.position) < 22) {
             monster.stun(4);
+            audio.playEvent('roar', .8);
             hud.notify('Вспышка ослепила Вендиго — бегите!');
           } else hud.notify('Фотовспышка сработала');
         } else hud.notify('Фотовспышка перезаряжается');
@@ -121,6 +124,7 @@ function bootstrap(): void {
         const note = notes.nearest(camera.position, 3.6);
         if (note) {
           hud.notify(notes.collect(note), 5200);
+          audio.playEvent('step', .4);
           state.notesFound = notes.count;
           hud.update(state);
           save.save(state);
@@ -149,12 +153,12 @@ function bootstrap(): void {
       if (state.phase !== 'playing') return;
 
       elapsed += dt;
-      const isNight = elapsed > 85;
+      const isNight = elapsed > 45;
       const ambient = scene.getLightByName('night-ambient');
       if (ambient) ambient.intensity = isNight ? .22 : .52;
       scene.fogDensity = isNight ? .011 : .0045;
       scene.fogColor = isNight ? new Color3(.018, .025, .04) : new Color3(.12, .105, .09);
-      if (isNight && !monsterSpawned) { monster.spawn(camera.position); monsterSpawned = true; }
+      if (isNight && !monsterSpawned) { monster.spawn(camera.position); monsterSpawned = true; audio.playEvent('roar', .7); }
 
       const canSprint = sprinting && state.stamina > 0;
       if (canSprint) state.stamina = Math.max(0, state.stamina - dt * 25);
@@ -178,6 +182,7 @@ function bootstrap(): void {
       const distance = Vector3.Distance(monster.mesh.position, camera.position);
       if (!jumpscare.active && monster.mode === 'chase' && distance < 2.2) {
         jumpscare.start();
+        audio.playEvent('jumpscare', 1);
         monster.mesh.setEnabled(false);
       }
       if (jumpscare.active && jumpscare.update(dt) && !scareResolved) {
