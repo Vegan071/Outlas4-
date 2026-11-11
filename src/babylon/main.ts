@@ -19,7 +19,7 @@ function bootstrap():void{
   const gadgets=new Gadgets(scene,camera,state),monster=new Monster(scene,camera),audio=new AudioManager(scene),assets=new AssetLoader(scene),save=new SaveManager(),hud=new Hud();
   const menu=document.getElementById('menu'),start=document.getElementById('start-btn'),fps=document.getElementById('fps-counter');
   let previous=performance.now(),sprinting=false;
-  const startGame=():void=>{state.phase='playing';if(menu)menu.style.display='none';const layer=document.getElementById('ui-layer');if(layer)layer.style.display='block';canvas.requestPointerLock?.();canvas.focus();};
+  const saved=save.load();if(saved){state.health=saved.health??100;state.stamina=saved.stamina??100;notes.restore(saved.notesFound??0);state.notesFound=notes.count;if(state.notesFound>=10)scene.getTransformNodeByName('police-car')?.setEnabled(true);hud.update(state);}\n  const startGame=():void=>{if(state.phase==='won'||state.phase==='lost'){window.location.reload();return;}state.phase='playing';if(menu)menu.style.display='none';const layer=document.getElementById('ui-layer');if(layer)layer.style.display='block';canvas.requestPointerLock?.();canvas.focus();};
   start?.addEventListener('click',startGame);
   document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==canvas&&state.phase==='playing'){state.phase='paused';if(menu)menu.style.display='flex';const layer=document.getElementById('ui-layer');if(layer)layer.style.display='none';}});
   document.addEventListener('keydown',(e)=>{
@@ -66,7 +66,7 @@ function bootstrap():void{
    hud.showInteraction(note?'[E] Прочитать записку':(!state.substationPowered&&Vector3.Distance(camera.position,new Vector3(26,1,42))<4.5?'[E] Включить подстанцию':(state.notesFound>=10&&Vector3.Distance(camera.position,new Vector3(0,1,3))<5.5?'[E] Уехать на полицейской машине':'')));
    monster.update(dt,now,state.flashlightOn,sprinting);
    const distance=Vector3.Distance(monster.mesh.position,camera.position);
-   if(distance<1.15&&monster.mode==='chase'){state.health-=dt*35;if(state.health<=0){state.phase='lost';if(menu)menu.style.display='flex';const title=document.getElementById('menu-title');if(title)title.textContent='Вас настиг Вендиго';}}
+   if(distance<1.15&&monster.mode==='chase'){state.health-=dt*35;if(state.health<=0){state.phase='lost';if(menu)menu.style.display='flex';const title=document.getElementById('menu-title');if(title)title.textContent='Вас настиг Вендиго';if(start)start.textContent='Попробовать снова';}}
    if(state.radarUntil>now&&now>state.radarReadyAt-10000){/* radar pulse window */}
    if(camera.position.y< -5){state.phase='lost';if(menu)menu.style.display='flex';}
   });
