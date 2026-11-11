@@ -48,6 +48,7 @@ function bootstrap(): void {
     let monsterSpawned = false;
     let scareResolved = false;
     let flashPulseUntil = 0;
+    let twigCooldown = 0;
     let lastMonsterMode = monster.mode;
     const previousPlayerPosition = camera.position.clone();
 
@@ -106,6 +107,7 @@ function bootstrap(): void {
       if (e.code === 'KeyR') {
         if (gadgets.flashbang(now)) {
           flashPulseUntil = now + 180;
+          hud.flashScreen();
           audio.playEvent('flash', .9);
           if (Vector3.Distance(monster.mesh.position, camera.position) < 28) {
             monster.stun(4);
@@ -137,7 +139,7 @@ function bootstrap(): void {
         } else hud.notify('Радар перезаряжается');
       }
       if (e.code === 'KeyE') {
-        const note = notes.nearest(camera.position, 3.6);
+        const note = notes.nearest(camera.position, 3.6, camera.getForwardRay().direction);
         if (note) {
           hud.notify(notes.collect(note), 5200);
           audio.playEvent('twig', .2);
@@ -198,7 +200,11 @@ function bootstrap(): void {
       const movedDistance = Vector3.DistanceSquared(camera.position, previousPlayerPosition);
       const isMoving = movedDistance > .0008;
       previousPlayerPosition.copyFrom(camera.position);
-      const playerNoise = isMoving ? (canSprint ? 2 : 1) : 0;
+      twigCooldown = Math.max(0, twigCooldown - dt);
+      let playerNoise = isMoving ? (canSprint ? 2 : 1) : 0;
+      if (isMoving && canSprint && Math.abs(camera.position.x) > 38 && twigCooldown <= 0 && Math.random() < .25) {
+        playerNoise = 3; twigCooldown = 4; audio.playEvent('twig', .85);
+      }
       audio.setFootsteps(isMoving, canSprint);
       monster.update(dt, now, state.flashlightOn, canSprint, playerNoise);
       if (monster.mode !== lastMonsterMode) {
