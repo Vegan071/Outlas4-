@@ -1,6 +1,7 @@
 import { Color3, Mesh, MeshBuilder, PointLight, Ray, StandardMaterial, TransformNode, Vector3 } from '@babylonjs/core';
 import type { Scene } from '@babylonjs/core/scene';
 import type { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
+import type { WorldTextures } from '../world/createTextures';
 
 export type MonsterMode = 'patrol' | 'investigate_sound' | 'investigate_light' | 'ambush' | 'chase' | 'stunned';
 
@@ -26,10 +27,12 @@ export class Monster {
     private readonly scene: Scene,
     private readonly player: UniversalCamera,
     private readonly terrainHeight: (x: number, z: number) => number = () => 0,
+    textures?: WorldTextures,
   ) {
     this.material = new StandardMaterial('wendigo-hide', scene);
     this.material.diffuseColor = new Color3(.12, .095, .075);
     this.material.specularColor = new Color3(.08, .06, .05);
+    if (textures) this.material.diffuseTexture = textures.monsterSkin;
     this.mesh = MeshBuilder.CreateBox('wendigo-root', { width: .9, height: 2.8, depth: .62 }, scene);
     this.mesh.isVisible = false;
     this.mesh.setEnabled(false);
@@ -40,9 +43,11 @@ export class Monster {
     const head = MeshBuilder.CreateSphere('wendigo-head', { diameter: .72, segments: 8 }, scene);
     head.parent = this.mesh; head.position.set(0, 1.45, .04); head.material = this.material; head.isPickable = false;
     const bone = new StandardMaterial('wendigo-bone', scene);
-    bone.diffuseColor = new Color3(.42, .37, .29); bone.specularColor = new Color3(.12, .1, .08);
+    bone.diffuseColor = new Color3(.8, .8, .8); bone.specularColor = new Color3(.12, .1, .08);
+    if (textures) bone.diffuseTexture = textures.monsterBone;
     const darkFlesh = new StandardMaterial('wendigo-dark-flesh', scene);
-    darkFlesh.diffuseColor = new Color3(.055, .012, .012); darkFlesh.specularColor = new Color3(.22, .025, .02);
+    darkFlesh.diffuseColor = new Color3(.45, .35, .3); darkFlesh.specularColor = new Color3(.22, .025, .02);
+    if (textures) darkFlesh.diffuseTexture = textures.monsterSkin;
     const eyeBlack = new StandardMaterial('wendigo-eye-socket', scene);
     eyeBlack.diffuseColor = new Color3(.008, .002, .002);
     const makeDetail = (mesh: Mesh, parent: TransformNode, position: Vector3, mat: StandardMaterial): Mesh => {
