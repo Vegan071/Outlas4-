@@ -1,20 +1,24 @@
 {
   "name": "point-of-no-return",
   "version": "1.0.0",
-  "description": "Point of No Return: Eclipse 3D — хоррор от первого лица на Three.js",
+  "description": "Point of No Return: Eclipse 3D — браузерный хоррор на Babylon.js (миграция с Three.js)",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@babylonjs/core": "^8.0.0",
+    "@babylonjs/loaders": "^8.0.0",
     "simplex-noise": "^4.0.3",
     "three": "0.128.0",
     "yuka": "^0.7.8"
   },
   "devDependencies": {
+    "typescript": "^5.7.3",
     "vite": "^5.4.0"
   },
   "allowScripts": {
