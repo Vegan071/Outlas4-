@@ -48,6 +48,8 @@ function bootstrap(): void {
     let monsterSpawned = false;
     let scareResolved = false;
     let flashPulseUntil = 0;
+    let lastStepAt = 0;
+    const previousPlayerPosition = camera.position.clone();
 
     const saved = save.load();
     if (saved) {
@@ -176,7 +178,15 @@ function bootstrap(): void {
       const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(26, 1, 42)) < 4.5;
       const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, new Vector3(0, 1, 3)) < 5.5;
       hud.showInteraction(note ? '[E] Прочитать записку' : nearStation ? '[E] Включить подстанцию' : nearCar ? '[E] Уехать на полицейской машине' : '');
-      monster.update(dt, now, state.flashlightOn, canSprint, canSprint ? 2 : 1);
+      const movedDistance = Vector3.DistanceSquared(camera.position, previousPlayerPosition);
+      const isMoving = movedDistance > .0008;
+      previousPlayerPosition.copyFrom(camera.position);
+      const playerNoise = isMoving ? (canSprint ? 2 : 1) : 0;
+      if (isMoving && now - lastStepAt > (canSprint ? 330 : 540)) {
+        audio.playEvent('step', canSprint ? .65 : .35);
+        lastStepAt = now;
+      }
+      monster.update(dt, now, state.flashlightOn, canSprint, playerNoise);
       phantom.update(dt, isNight, camera.position);
 
       const distance = Vector3.Distance(monster.mesh.position, camera.position);
