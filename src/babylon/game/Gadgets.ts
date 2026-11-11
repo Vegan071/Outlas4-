@@ -35,8 +35,8 @@ export class Gadgets {
   }
   radar(now: number): boolean {
     if (now < this.state.radarReadyAt) return false;
-    this.state.radarReadyAt = now + (this.state.substationPowered ? 12500 : 25000);
     this.state.radarUntil = now + 5000;
+    this.state.radarReadyAt = this.state.radarUntil + (this.state.substationPowered ? 12500 : 25000);
     return true;
   }
   dispose(): void { this.flashlight.dispose(); this.flashLightMesh.dispose(); }
