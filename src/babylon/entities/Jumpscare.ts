@@ -13,7 +13,7 @@ export class Jumpscare {
     const bone = new StandardMaterial('scare-bone', scene); bone.diffuseColor = new Color3(.55, .48, .36);
     const eyes = new StandardMaterial('scare-eyes', scene); eyes.emissiveColor = new Color3(1, .01, .005);
     const root = MeshBuilder.CreateSphere('jumpscare-root', { diameter: .72, segments: 10 }, scene);
-    root.parent = camera; root.position.set(0, -.04, -1); root.material = bone; root.isPickable = false; root.setEnabled(false); this.root = root;
+    root.parent = camera; root.position.set(0, -.04, 1); root.material = bone; root.isPickable = false; root.setEnabled(false); this.root = root;
     for (const x of [-.2, .2]) {
       const eye = MeshBuilder.CreateSphere('scare-eye', { diameter: .11 }, scene); eye.parent = root; eye.position.set(x, .1, .3); eye.material = eyes; eye.isPickable = false;
       const horn = MeshBuilder.CreateCylinder('scare-horn', { height: .7, diameterTop: 0, diameterBottom: .09 }, scene); horn.parent = root; horn.position.set(x * 1.3, .53, 0); horn.rotation.z = x > 0 ? -.35 : .35; horn.material = skin; horn.isPickable = false;
@@ -29,7 +29,7 @@ export class Jumpscare {
     this.elapsed += dt; const t = this.elapsed;
     this.root.position.x = (Math.random() - .5) * .08;
     this.root.position.y = -.04 + (Math.random() - .5) * .08;
-    this.root.position.z = -.82 + Math.sin(t * 35) * .08;
+    this.root.position.z = .82 + Math.sin(t * 35) * .08;
     this.jaw.rotation.x = .35 + Math.abs(Math.sin(t * 28)) * .45;
     if (t >= 1.6) { this.active = false; this.root.setEnabled(false); return true; }
     return false;
