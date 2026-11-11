@@ -71,6 +71,7 @@ function bootstrap(): void {
     }
 
     const showMenu = (heading: string, button: string): void => {
+      audio.suspend();
       if (menu) menu.style.display = 'flex';
       if (title) title.textContent = heading;
       if (start) start.textContent = button;
