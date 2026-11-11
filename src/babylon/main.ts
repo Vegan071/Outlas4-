@@ -48,7 +48,7 @@ function bootstrap(): void {
     let monsterSpawned = false;
     let scareResolved = false;
     let flashPulseUntil = 0;
-    let lastStepAt = 0;
+    let lastMonsterMode = monster.mode;
     const previousPlayerPosition = camera.position.clone();
 
     const saved = save.load();
@@ -82,6 +82,7 @@ function bootstrap(): void {
     document.addEventListener('pointerlockchange', () => {
       if (document.pointerLockElement !== canvas && state.phase === 'playing' && !jumpscare.active) {
         state.phase = 'paused';
+        audio.setFootsteps(false, false); audio.setHeartbeat(false);
         showMenu('Пауза', 'Продолжить');
       }
     });
@@ -126,7 +127,7 @@ function bootstrap(): void {
         const note = notes.nearest(camera.position, 3.6);
         if (note) {
           hud.notify(notes.collect(note), 5200);
-          audio.playEvent('step', .4);
+          audio.playEvent('twig', .2);
           state.notesFound = notes.count;
           hud.update(state);
           save.save(state);
@@ -152,7 +153,7 @@ function bootstrap(): void {
       const dt = Math.min((now - previous) / 1000, .05);
       previous = now;
       if (fps) fps.textContent = 'FPS: ' + Math.round(engine.getFps());
-      if (state.phase !== 'playing') return;
+      if (state.phase !== 'playing') { audio.setFootsteps(false, false); audio.setHeartbeat(false); return; }
 
       elapsed += dt;
       const isNight = elapsed > 45;
@@ -181,13 +182,17 @@ function bootstrap(): void {
       const movedDistance = Vector3.DistanceSquared(camera.position, previousPlayerPosition);
       const isMoving = movedDistance > .0008;
       previousPlayerPosition.copyFrom(camera.position);
-      const playerNoise = isMoving ? (canSprint ? 2 : 1) : 0;
-      if (isMoving && now - lastStepAt > (canSprint ? 330 : 540)) {
-        audio.playEvent('step', canSprint ? .65 : .35);
-        lastStepAt = now;
-      }
+      const playerNoise = isMoving ? (canSprint ? 3 : 1) : 0;
+      audio.setFootsteps(isMoving, canSprint);
       monster.update(dt, now, state.flashlightOn, canSprint, playerNoise);
-      phantom.update(dt, isNight, camera.position);
+      if (monster.mode !== lastMonsterMode) {
+        if (monster.mode === 'chase') audio.playEvent('roar', .9);
+        if (monster.mode === 'investigate_sound' || monster.mode === 'investigate_light') audio.playEvent('twig', .45);
+        lastMonsterMode = monster.mode;
+      }
+      const closeToMonster = monster.mesh.isEnabled() && Vector3.Distance(camera.position, monster.mesh.position) < 18;
+      audio.setHeartbeat(closeToMonster && monster.mode === 'chase');
+      if (phantom.update(dt, isNight, camera.position)) audio.playEvent('whisper', .7);
 
       const distance = Vector3.Distance(monster.mesh.position, camera.position);
       if (!jumpscare.active && monster.mode === 'chase' && distance < 2.2) {
