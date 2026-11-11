@@ -166,12 +166,12 @@ function bootstrap(): void {
           state.phase = 'won'; showMenu('Вы спаслись', 'Играть снова');
         } else if (nearStation) {
           state.substationPowered = true; worldLayout.activateSubstation(); save.save(state);
-          audio.playEvent('creak', .35);
+          audio.playEvent('switch', .55);
           hud.notify('Подстанция запущена. Прожекторы города включены, радар перезаряжается быстрее.');
         } else {
           const note = notes.nearest(camera.position, 3.6, camera.getForwardRay().direction);
           if (note) {
-            hud.notify(notes.collect(note), 5200); audio.playEvent('twig', .2);
+            hud.notify(notes.collect(note), 5200); audio.playEvent('pickup', .65);
             state.notesFound = notes.count; hud.update(state); save.save(state);
             if (state.notesFound === 10) {
               worldLayout.spawnPoliceCar(); audio.startSiren();
