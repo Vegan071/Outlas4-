@@ -58,6 +58,8 @@ export class AudioManager {
   }
 
   suspend(): void {
+    this.ambienceRequested = false;
+    if (this.ambienceTimer !== null) { window.clearInterval(this.ambienceTimer); this.ambienceTimer = null; }
     this.setFootsteps(false, false); this.setHeartbeat(false); this.setSirenVolume(0);
     for (const sound of this.sounds.values()) if (sound.isPlaying) sound.pause();
     if (this.context?.state === 'running') void this.context.suspend();
