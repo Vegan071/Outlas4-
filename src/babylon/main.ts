@@ -9,6 +9,7 @@ import { createGameState } from './game/GameState';
 import { NotesManager } from './game/NotesManager';
 import { Gadgets } from './game/Gadgets';
 import { SaveManager } from './game/SaveManager';
+import { GameSettings } from './game/GameSettings';
 import { Monster } from './entities/Monster';
 import { Phantom } from './entities/Phantom';
 import { Jumpscare } from './entities/Jumpscare';
@@ -31,6 +32,7 @@ function bootstrap(): void {
     const phantom = new Phantom(scene, camera);
     const jumpscare = new Jumpscare(scene, camera);
     const audio = new AudioManager(scene);
+    const settings = new GameSettings(engine, camera, audio);
     const assets = new AssetLoader(scene);
     const save = new SaveManager();
     const hud = new Hud();
@@ -239,7 +241,7 @@ function bootstrap(): void {
     });
 
     engine.runRenderLoop(() => scene.render());
-    if (import.meta.env.DEV) Object.assign(window, { __ponrBabylon: { engine, scene, camera, state, notes, monster, phantom, jumpscare, audio, assets, gadgets } });
+    if (import.meta.env.DEV) Object.assign(window, { __ponrBabylon: { engine, scene, camera, state, notes, monster, phantom, jumpscare, audio, assets, gadgets, settings } });
     window.addEventListener('beforeunload', () => {
       save.save(state); gadgets.dispose(); monster.dispose(); phantom.dispose(); jumpscare.dispose();
       audio.dispose(); scene.dispose(); engine.dispose();
