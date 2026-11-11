@@ -1,71 +1,147 @@
 import { Sound } from '@babylonjs/core/Audio/sound';
 import type { Scene } from '@babylonjs/core/scene';
 
-/** Audio registry for imported licensed assets plus synthesized fallback SFX. */
+const CC0 = 'https://sfxmint.com/dl/';
+const FILES = {
+  ambience: CC0 + 'horror-ambience-dark-81.mp3',
+  drone: CC0 + 'horror-drone-25.mp3',
+  stinger: CC0 + 'horror-stinger-54.mp3',
+  heartbeat: CC0 + 'horror-heartbeat-73.mp3',
+  creak: CC0 + 'horror-creak-61.mp3',
+  growl: CC0 + 'horror-growl-11.mp3',
+  thunder: CC0 + 'ambience-thunder-04.mp3',
+  footsteps: CC0 + 'footsteps-concrete-03.mp3',
+  running: CC0 + 'footsteps-concrete-20.mp3',
+  wind: CC0 + 'horror-wind-whisper-56.mp3',
+  twig: CC0 + 'wood-snap-06.mp3',
+} as const;
+
+type EventName = 'step' | 'twig' | 'roar' | 'whisper' | 'heartbeat' | 'flash' | 'jumpscare' | 'siren' | 'thunder' | 'creak';
+
+/**
+ * CC0 sound library integration.
+ * Remote MP3s are hotlinked from SFXMint (CC0 1.0); browser audio is unlocked on Start.
+ * Procedural WebAudio remains a fallback if a remote file is unavailable.
+ */
 export class AudioManager {
   private readonly sounds = new Map<string, Sound>();
   private context: AudioContext | null = null;
-  private master = 0.65;
+  private master = 0.7;
   private ambienceTimer: number | null = null;
+  private footstepsActive = false;
+  private runningFootsteps = false;
 
-  constructor(private readonly scene: Scene) {}
-
-  load(id: string, url: string, options: { loop?: boolean; volume?: number; spatial?: boolean } = {}): void {
-    if (this.sounds.has(id)) return;
-    const sound = new Sound(id, url, this.scene, undefined, {
-      autoplay: false, loop: options.loop ?? false, volume: options.volume ?? 1,
-      spatialSound: options.spatial ?? false, distanceModel: 'linear', maxDistance: 45,
-    });
-    this.sounds.set(id, sound);
+  constructor(private readonly scene: Scene) {
+    for (const [id, url] of Object.entries(FILES)) {
+      const loop = ['ambience', 'drone', 'wind', 'heartbeat', 'footsteps', 'running'].includes(id);
+      const volume = id === 'ambience' ? .34 : id === 'drone' ? .22 : id === 'wind' ? .2 :
+        id === 'heartbeat' ? .0 : id === 'footsteps' || id === 'running' ? .42 : .75;
+      try {
+        this.sounds.set(id, new Sound(id, url, scene, undefined, {
+          autoplay: false, loop, volume: volume * this.master,
+          spatialSound: false, distanceModel: 'linear', maxDistance: 55,
+        }));
+      } catch (error) {
+        console.warn('Unable to load CC0 sound:', id, error);
+      }
+    }
   }
 
-  /** Must be called from a user gesture because browsers gate audio playback. */
   async unlock(): Promise<void> {
-    if (!this.context) {
-      const AudioContextClass = window.AudioContext;
-      if (AudioContextClass) this.context = new AudioContextClass();
-    }
+    if (!this.context && window.AudioContext) this.context = new window.AudioContext();
     if (this.context?.state === 'suspended') await this.context.resume();
   }
 
-  play(id: string): void { this.sounds.get(id)?.play(); }
+  private playSound(id: string): boolean {
+    const sound = this.sounds.get(id);
+    if (!sound || !sound.isReady()) return false;
+    if (!sound.isPlaying) sound.play();
+    return true;
+  }
 
-  /** Procedural fallback effects keep the game audible before external audio assets are supplied. */
-  playEvent(event: 'step' | 'twig' | 'roar' | 'whisper' | 'heartbeat' | 'flash' | 'jumpscare' | 'siren', intensity = 1): void {
-    const ctx = this.context;
-    if (!ctx || ctx.state !== 'running') return;
-    const now = ctx.currentTime;
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(Math.max(.001, Math.min(1, intensity)) * this.master * .18, now);
-    gain.gain.exponentialRampToValueAtTime(.001, now + (event === 'jumpscare' ? .9 : .28));
-    gain.connect(ctx.destination);
-    const osc = ctx.createOscillator();
-    const filter = ctx.createBiquadFilter();
-    filter.type = event === 'whisper' || event === 'twig' ? 'highpass' : 'lowpass';
-    filter.frequency.value = event === 'roar' || event === 'jumpscare' ? 520 : 1800;
-    osc.type = event === 'twig' || event === 'flash' ? 'triangle' : 'sawtooth';
-    const base = event === 'heartbeat' ? 48 : event === 'step' ? 72 : event === 'twig' ? 950 : event === 'flash' ? 1250 : event === 'whisper' ? 420 : event === 'siren' ? 680 : 95;
-    osc.frequency.setValueAtTime(base, now);
-    osc.frequency.exponentialRampToValueAtTime(Math.max(25, base * (event === 'roar' || event === 'jumpscare' ? .28 : .62)), now + .22);
-    osc.connect(filter); filter.connect(gain);
-    osc.start(now); osc.stop(now + (event === 'jumpscare' ? .9 : .3));
-    if (event === 'heartbeat') {
-      const second = ctx.createOscillator(); const g2 = ctx.createGain();
-      g2.gain.setValueAtTime(this.master * .13, now + .16); g2.gain.exponentialRampToValueAtTime(.001, now + .4);
-      second.frequency.value = 42; second.connect(g2); g2.connect(ctx.destination); second.start(now + .16); second.stop(now + .42);
+  private stopSound(id: string): void {
+    const sound = this.sounds.get(id);
+    if (sound?.isPlaying) sound.stop();
+  }
+
+  playEvent(event: EventName, intensity = 1): void {
+    const ids: Record<EventName, string> = {
+      step: 'footsteps', twig: 'twig', roar: 'growl', whisper: 'wind',
+      heartbeat: 'heartbeat', flash: '', jumpscare: 'stinger', siren: 'thunder',
+      thunder: 'thunder', creak: 'creak',
+    };
+    const id = ids[event];
+    const sound = this.sounds.get(id);
+    if (id && sound?.isReady()) {
+      sound.setVolume(Math.max(.05, Math.min(1, intensity)) * this.master * (id === 'growl' ? .9 : 1));
+      sound.stop();
+      sound.play();
+      return;
     }
+    this.playFallback(event, intensity);
+  }
+
+  setFootsteps(moving: boolean, running: boolean): void {
+    if (!moving) {
+      if (this.footstepsActive) {
+        this.stopSound(this.runningFootsteps ? 'running' : 'footsteps');
+        this.footstepsActive = false;
+      }
+      return;
+    }
+    const id = running ? 'running' : 'footsteps';
+    if (this.footstepsActive && this.runningFootsteps === running) return;
+    if (this.footstepsActive) this.stopSound(this.runningFootsteps ? 'running' : 'footsteps');
+    const sound = this.sounds.get(id);
+    if (sound?.isReady()) {
+      sound.setVolume(this.master * (running ? .58 : .4));
+      sound.play();
+    }
+    this.footstepsActive = true;
+    this.runningFootsteps = running;
+  }
+
+  setHeartbeat(active: boolean): void {
+    const sound = this.sounds.get('heartbeat');
+    if (!sound?.isReady()) return;
+    if (active && !sound.isPlaying) { sound.setVolume(this.master * .5); sound.play(); }
+    if (!active && sound.isPlaying) sound.stop();
   }
 
   startAmbience(): void {
+    this.playSound('ambience');
+    this.playSound('drone');
+    this.playSound('wind');
     if (this.ambienceTimer !== null) return;
     this.ambienceTimer = window.setInterval(() => {
-      if (Math.random() > .55) this.playEvent('whisper', .18 + Math.random() * .22);
-    }, 6500);
+      if (Math.random() > .62) this.playEvent(Math.random() > .5 ? 'twig' : 'creak', .25);
+      else if (Math.random() > .72) this.playEvent('whisper', .2);
+    }, 7200);
   }
 
   setMasterVolume(volume: number): void {
     this.master = Math.max(0, Math.min(1, volume));
-    for (const sound of this.sounds.values()) sound.setVolume(this.master);
+    for (const [id, sound] of this.sounds) {
+      const base = id === 'ambience' ? .34 : id === 'drone' ? .22 : id === 'wind' ? .2 : id === 'heartbeat' ? .5 : .7;
+      sound.setVolume(base * this.master);
+    }
+  }
+
+  private playFallback(event: EventName, intensity: number): void {
+    if (!this.context || this.context.state !== 'running') return;
+    const ctx = this.context, now = ctx.currentTime;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(Math.max(.001, Math.min(1, intensity)) * this.master * .15, now);
+    gain.gain.exponentialRampToValueAtTime(.001, now + (event === 'jumpscare' ? .9 : .3));
+    gain.connect(ctx.destination);
+    const osc = ctx.createOscillator(), filter = ctx.createBiquadFilter();
+    filter.type = event === 'whisper' || event === 'twig' ? 'highpass' : 'lowpass';
+    filter.frequency.value = event === 'roar' || event === 'jumpscare' ? 420 : 1600;
+    osc.type = event === 'twig' || event === 'flash' ? 'triangle' : 'sawtooth';
+    const base = event === 'heartbeat' ? 48 : event === 'step' ? 72 : event === 'twig' ? 950 : event === 'flash' ? 1250 : event === 'whisper' ? 420 : 95;
+    osc.frequency.setValueAtTime(base, now);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(25, base * .35), now + .22);
+    osc.connect(filter); filter.connect(gain); osc.start(now); osc.stop(now + .3);
   }
 
   dispose(): void {
