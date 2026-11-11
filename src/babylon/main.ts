@@ -244,7 +244,7 @@ function bootstrap(): void {
         showMenu('Вы погибли', 'Попробовать снова');
       }
       if (now > flashPulseUntil) { /* flash pulse is intentionally brief */ }
-      hud.update(state, monster.mesh.isEnabled() ? monster.mode : undefined, monster.mesh.isEnabled() ? Vector3.Distance(camera.position, monster.mesh.position) : undefined);
+      hud.update(state, monster.mesh.isEnabled() ? monster.mode : undefined, monster.mesh.isEnabled() ? Vector3.Distance(camera.position, monster.mesh.position) : undefined, playerNoise);
     });
 
     engine.runRenderLoop(() => scene.render());
