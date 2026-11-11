@@ -7,9 +7,10 @@ export class Phantom {
   readonly root: Mesh;
   private cooldown = 18;
   private visibleFor = 0;
-  constructor(scene: Scene, private camera: UniversalCamera) {
+  constructor(scene: Scene, private camera: UniversalCamera, private terrainHeight: (x: number, z: number) => number) {
     const mat = new StandardMaterial('phantom-mat', scene);
     mat.diffuseColor = new Color3(.005, .005, .008); mat.emissiveColor = new Color3(.006, .006, .009);
+    mat.alpha = .88; mat.disableLighting = true; mat.backFaceCulling = false;
     const root = MeshBuilder.CreateCapsule('phantom', { height: 2.6, radius: .32, tessellation: 7 }, scene);
     root.material = mat; root.isPickable = false; root.setEnabled(false); this.root = root;
     const head = MeshBuilder.CreateSphere('phantom-head', { diameter: .58, segments: 7 }, scene);
@@ -26,7 +27,8 @@ export class Phantom {
       const angle = (Math.random() - .5) * 1.1;
       const c = Math.cos(angle), s = Math.sin(angle);
       const x = forward.x * c - forward.z * s, z = forward.x * s + forward.z * c;
-      this.root.position.set(player.x + x * 16, 1.3, player.z + z * 16);
+      const px = player.x + x * 16, pz = player.z + z * 16;
+      this.root.position.set(px, this.terrainHeight(px, pz) + 1.3, pz);
       this.root.lookAt(player);
       this.root.setEnabled(true); this.visibleFor = 2.8; this.cooldown = 22 + Math.random() * 18;
       return true;
