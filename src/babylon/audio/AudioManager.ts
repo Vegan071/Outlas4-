@@ -45,7 +45,7 @@ export class AudioManager {
       try {
         let sound!: Sound;
         sound = new Sound(id, url, scene, () => {
-          if (this.ambienceRequested && ['ambience', 'drone', 'wind'].includes(id) && !sound.isPlaying) sound.play();
+          if (this.ambienceRequested && ['ambience', 'drone'].includes(id) && !sound.isPlaying) sound.play();
         }, {
           autoplay: false, loop, volume: volume * this.master,
           spatialSound: false, distanceModel: 'linear', maxDistance: 55,
@@ -146,7 +146,6 @@ export class AudioManager {
     this.ambienceRequested = true;
     this.playSound('ambience');
     this.playSound('drone');
-    this.playSound('wind');
     if (this.ambienceTimer !== null) return;
     this.ambienceTimer = window.setInterval(() => {
       if (Math.random() > .62) this.playEvent(Math.random() > .5 ? 'twig' : 'creak', .25);
