@@ -191,6 +191,7 @@ function bootstrap(): void {
       const dayProgress = Math.min(elapsed / 45, 1);
       const isNight = dayProgress >= 1;
       worldLayout.updateAtmosphere(dt, dayProgress, camera.position);
+      gadgets.update(dt, now);
       if (isNight && !monsterSpawned) { monster.spawn(camera.position); monsterSpawned = true; audio.playEvent('roar', .7); }
 
       const canSprint = sprinting && state.stamina > 0;
