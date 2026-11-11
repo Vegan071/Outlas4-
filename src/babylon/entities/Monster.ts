@@ -12,7 +12,7 @@ export type MonsterMode = 'patrol' | 'investigate_sound' | 'investigate_light' |
  * the original Three.js/Yuka implementation while keeping the controller engine-native.
  */
 export class Monster {
-  readonly mesh: Mesh;
+  readonly mesh: TransformNode;
   mode: MonsterMode = 'patrol';
   private target = new Vector3(30, 0, 0);
   private lastKnown = Vector3.Zero();
@@ -43,10 +43,8 @@ export class Monster {
     this.material.diffuseColor = new Color3(.12, .095, .075);
     this.material.specularColor = new Color3(.08, .06, .05);
     this.material.diffuseTexture = world.textures.monsterSkin;
-    this.mesh = MeshBuilder.CreateBox('wendigo-root', { width: 1.2, height: 5.8, depth: .8 }, scene);
-    this.mesh.isVisible = false;
+    this.mesh = new TransformNode('wendigo-root', scene);
     this.mesh.setEnabled(false);
-    this.mesh.isPickable = false;
     this.mesh.position.set(0, 0, 0);
     const torso = MeshBuilder.CreateCylinder('wendigo-torso', { height: 1.9, diameterTop: .68, diameterBottom: .44, tessellation: 8 }, scene);
     torso.parent = this.mesh; torso.position.set(0, 3.1, .02); torso.rotation.x = .18; torso.material = this.material; torso.isPickable = false;
@@ -188,7 +186,7 @@ export class Monster {
     const z = Math.max(-300, Math.min(300, player.z + (Math.random() > .5 ? 85 : -85)));
     this.mesh.position.set(0, this.terrainHeight(0, z), z);
     this.vehicle.position.set(0, 0, z); this.vehicle.velocity.set(0, 0, 0);
-    this.mesh.setEnabled(true); this.mesh.isVisible = false;
+    this.mesh.setEnabled(true);
     this.mode = 'patrol'; this.patrolWait = 0; this.pickPatrolTarget(player);
   }
 
@@ -208,7 +206,7 @@ export class Monster {
     const origin = this.mesh.position.add(new Vector3(0, 4.8, 0));
     const direction = this.player.position.subtract(origin).normalize();
     const ray = new Ray(origin, direction, distance);
-    const hit = this.scene.pickWithRay(ray, mesh => mesh.isEnabled() && mesh.checkCollisions && mesh !== this.mesh && mesh.name !== 'terrain' && mesh.name !== 'main-road');
+    const hit = this.scene.pickWithRay(ray, mesh => mesh.isEnabled() && mesh.checkCollisions && mesh.name !== 'terrain' && mesh.name !== 'main-road');
     return !hit?.hit || (hit.distance ?? distance) >= distance - .8;
   }
 
