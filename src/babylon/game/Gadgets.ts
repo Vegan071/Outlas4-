@@ -39,5 +39,11 @@ export class Gadgets {
     this.state.radarReadyAt = this.state.radarUntil + (this.state.substationPowered ? 12500 : 25000);
     return true;
   }
+  update(dt: number, now: number): void {
+    if (!this.state.substationPowered) return;
+    const reduction = dt * 1000;
+    if (this.state.flashbangReadyAt > now) this.state.flashbangReadyAt = Math.max(now, this.state.flashbangReadyAt - reduction);
+    if (this.state.radarUntil <= now && this.state.radarReadyAt > now) this.state.radarReadyAt = Math.max(now, this.state.radarReadyAt - reduction);
+  }
   dispose(): void { this.flashlight.dispose(); this.flashLightMesh.dispose(); }
 }
