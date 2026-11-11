@@ -203,7 +203,7 @@ export class Monster {
   }
 
   private move(dt: number, speed: number, _seeking: boolean): void {
-    const direction = this.target.subtract(this.mesh.position); direction.y = 0;
+    let direction = this.target.subtract(this.mesh.position); direction.y = 0;
     if (direction.lengthSquared() < .01) return;
     direction.normalize();
     const origin = this.mesh.position.add(new Vector3(0, .8, 0));
