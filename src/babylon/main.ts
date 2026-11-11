@@ -55,7 +55,8 @@ function bootstrap(): void {
 
     scene.onBeforeRenderObservable.add(() => {
       if (fps) fps.textContent = 'FPS: ' + Math.round(engine.getFps());
-      const nearNote = camera.position.subtract(new Vector3(0, 0.65, 5)).length() < 2.1;
+      const noteExists = scene.getMeshByName('test-note') !== null;
+      const nearNote = noteExists && camera.position.subtract(new Vector3(0, 0.65, 5)).length() < 2.1;
       if (interaction) {
         interaction.textContent = nearNote ? '[E] Осмотреть записку' : '';
         interaction.style.display = nearNote ? 'block' : 'none';
@@ -63,7 +64,8 @@ function bootstrap(): void {
     });
 
     document.addEventListener('keydown', (event) => {
-      const nearNote = camera.position.subtract(new Vector3(0, 0.65, 5)).length() < 2.1;
+      const noteExists = scene.getMeshByName('test-note') !== null;
+      const nearNote = noteExists && camera.position.subtract(new Vector3(0, 0.65, 5)).length() < 2.1;
       if (started && event.code === 'KeyE' && nearNote) {
         const note = scene.getMeshByName('test-note');
         if (note) {
