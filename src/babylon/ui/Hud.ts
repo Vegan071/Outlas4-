@@ -39,8 +39,8 @@ export class Hud {
     this.bodycamOverlay = document.createElement('div');
     this.bodycamOverlay.id = 'bodycam-overlay';
     Object.assign(this.bodycamOverlay.style, {
-      position: 'fixed', inset: '0', zIndex: '5', pointerEvents: 'none', opacity: '.24',
-      background: 'radial-gradient(ellipse at center, transparent 48%, rgba(0,0,0,.52) 100%), repeating-linear-gradient(0deg, rgba(0,0,0,.10) 0px, rgba(0,0,0,.10) 1px, transparent 2px, transparent 4px), linear-gradient(90deg, rgba(255,0,0,.025), transparent 18%, transparent 82%, rgba(0,70,255,.025)',
+      position: 'fixed', inset: '0', zIndex: '5', pointerEvents: 'none', opacity: '.04',
+      background: 'linear-gradient(90deg, rgba(255,0,0,.06), transparent 20%, transparent 80%, rgba(0,70,255,.06)',
       mixBlendMode: 'multiply',
     });
     document.body.append(this.bodycamOverlay);
@@ -70,7 +70,7 @@ export class Hud {
     if (state.substationPowered) lines.push('ПОДСТАНЦИЯ  ВКЛ');
     if (state.radarUntil > now) lines.push('ЭМП  СКАНИРОВАНИЕ');
     const fear = monsterDistance === undefined ? 0 : Math.max(0, 1 - monsterDistance / 58);
-    this.bodycamOverlay.style.opacity = String(.22 + fear * .32);
+    this.bodycamOverlay.style.opacity = String(.04 + fear * .12);
     const noiseLabels = ['ТИХО', 'ШАГИ', 'СПРИНТ', 'ХРУСТ ВЕТКИ'];
     lines.push('ШУМ  ' + noiseLabels[Math.max(0, Math.min(3, playerNoise))]);
     if (monsterMode) {
