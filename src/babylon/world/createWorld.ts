@@ -14,6 +14,9 @@ export interface WorldLayout {
   terrainHeight: (x: number, z: number) => number;
   updateAtmosphere: (delta: number, progress: number, player: Vector3) => void;
   activateSubstation: () => void;
+  spawnPoliceCar: () => Vector3;
+  updatePoliceCar: (time: number, player: Vector3) => number;
+  policeCarPosition: () => Vector3;
 }
 
 const POI = {
@@ -234,8 +237,31 @@ export function createWorld(scene: Scene): WorldLayout {
   makeBox(scene, 'police-car-body', 2.1, .8, 4.4, 0, .8, 0, material(scene, 'police-car-paint', new Color3(.75, .76, .72))).parent = policeCar;
   makeBox(scene, 'police-car-roof', 1.75, .65, 2.1, 0, 1.5, -.15, glass).parent = policeCar;
   makeBox(scene, 'police-car-stripe', 2.12, .18, 4.42, 0, .82, 0, material(scene, 'police-car-stripe-mat', new Color3(.04, .12, .55))).parent = policeCar;
-  const red = new PointLight('siren-red', new Vector3(-.35, 2, 0), scene); red.parent = policeCar; red.diffuse = new Color3(1, .02, .01); red.intensity = 1.5; red.range = 8;
-  const blue = new PointLight('siren-blue', new Vector3(.35, 2, 0), scene); blue.parent = policeCar; blue.diffuse = new Color3(.02, .12, 1); blue.intensity = 1.5; blue.range = 8;
+  const lightbar = makeBox(scene, 'police-lightbar', 1.4, .15, .4, 0, 1.6, -.2, black); lightbar.parent = policeCar;
+  const red = new PointLight('siren-red', new Vector3(-.6, 2.2, -.2), scene); red.parent = policeCar; red.diffuse = new Color3(1, .02, .01); red.intensity = 0; red.range = 45;
+  const blue = new PointLight('siren-blue', new Vector3(.6, 2.2, -.2), scene); blue.parent = policeCar; blue.diffuse = new Color3(.02, .12, 1); blue.intensity = 0; blue.range = 45;
+  const spawnPoliceCar = (): Vector3 => {
+    if (policeCar.isEnabled()) return policeCar.position.clone();
+    let x = 0, z = 0;
+    switch (Math.floor(random() * 4)) {
+      case 0: x = 120 + random() * 85; z = -100 + random() * 200; break;
+      case 1: x = -120 - random() * 85; z = -100 + random() * 200; break;
+      case 2: x = -90 + random() * 180; z = 240 + random() * 65; break;
+      default: x = -90 + random() * 180; z = -240 - random() * 65; break;
+    }
+    policeCar.position.set(x, terrainHeight(x, z), z);
+    policeCar.rotation.y = random() * Math.PI * 2;
+    policeCar.setEnabled(true);
+    return policeCar.position.clone();
+  };
+  const updatePoliceCar = (time: number, player: Vector3): number => {
+    if (!policeCar.isEnabled()) return 0;
+    const phase = Math.floor((time / 1000) * 6) % 2 === 0;
+    red.intensity = phase ? 5 : 0; blue.intensity = phase ? 0 : 5;
+    const distance = Vector3.Distance(player, policeCar.position);
+    return distance < 95 ? .38 * (1 - distance / 95) : 0;
+  };
+  const policeCarPosition = (): Vector3 => policeCar.position;
 
   // Original invisible world boundary walls.
   const boundaryMat = material(scene, 'boundary-invisible', new Color3(0, 0, 0));
@@ -298,5 +324,5 @@ export function createWorld(scene: Scene): WorldLayout {
     ash.thinInstanceBufferUpdated('matrix');
   };
 
-  return { trees, houses, cars, terrainHeight, updateAtmosphere, activateSubstation };
+  return { trees, houses, cars, terrainHeight, updateAtmosphere, activateSubstation, spawnPoliceCar, updatePoliceCar, policeCarPosition };
 }
