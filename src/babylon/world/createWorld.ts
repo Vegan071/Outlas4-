@@ -1,6 +1,6 @@
 import {
   Color3, DirectionalLight, HemisphericLight, Matrix, Mesh, MeshBuilder, PointLight,
-  Quaternion, Scene, StandardMaterial, TransformNode, Vector3, VertexBuffer,
+  Quaternion, Scene, StandardMaterial, TransformNode, Vector3, VertexBuffer, VertexData,
 } from '@babylonjs/core';
 import { createNoise2D } from 'simplex-noise';
 
@@ -63,7 +63,9 @@ export function createWorld(scene: Scene): WorldLayout {
       positions[i + 1] = terrainHeight(positions[i], positions[i + 2]);
     }
     ground.updateVerticesData(VertexBuffer.PositionKind, positions);
-    ground.createNormals(true);
+    const indices = ground.getIndices();
+    const normals: number[] = [];
+    if (indices) { VertexData.ComputeNormals(positions, indices, normals); ground.setVerticesData(VertexBuffer.NormalKind, normals, true); }
   }
   ground.material = material(scene, 'terrain-material', new Color3(.075, .09, .06));
   ground.checkCollisions = true;
