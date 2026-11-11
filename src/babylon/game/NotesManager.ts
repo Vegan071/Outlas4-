@@ -80,12 +80,18 @@ export class NotesManager {
     }
   }
 
-  nearest(position: Vector3, maxDistance = 2.2): Note | null {
+  nearest(position: Vector3, maxDistance = 2.2, forward?: Vector3): Note | null {
     let best: Note | null = null, distance = maxDistance;
     for (const note of this.notes) {
       if (note.collected) continue;
-      const d = Vector3.Distance(position, note.mesh.position);
-      if (d < distance) { distance = d; best = note; }
+      const offset = note.mesh.position.subtract(position);
+      const d = offset.length();
+      if (d >= distance) continue;
+      if (forward && d > 0) {
+        offset.scaleInPlace(1 / d);
+        if (Vector3.Dot(forward.normalizeToNew(), offset) <= .78) continue;
+      }
+      distance = d; best = note;
     }
     return best;
   }
