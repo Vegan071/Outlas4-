@@ -6,6 +6,7 @@ export class Hud {
   private counter = document.getElementById('note-counter');
   private message: HTMLDivElement;
   private stats: HTMLDivElement;
+  private flashOverlay: HTMLDivElement;
   private hideTimer: number | undefined;
 
   constructor() {
@@ -27,6 +28,13 @@ export class Hud {
       font: '14px Courier New', whiteSpace: 'pre-line',
     });
     layer.append(this.stats);
+    this.flashOverlay = document.createElement('div');
+    this.flashOverlay.id = 'flashbang-overlay';
+    Object.assign(this.flashOverlay.style, {
+      position: 'fixed', inset: '0', zIndex: '30', pointerEvents: 'none',
+      background: '#fff', opacity: '0', transition: 'opacity 90ms linear',
+    });
+    document.body.append(this.flashOverlay);
   }
 
   showInteraction(text: string): void {
@@ -35,14 +43,23 @@ export class Hud {
     this.interaction.style.display = text ? 'block' : 'none';
   }
 
+  flashScreen(): void {
+    this.flashOverlay.style.opacity = '1';
+    window.setTimeout(() => { this.flashOverlay.style.opacity = '0'; }, 130);
+  }
+
   update(state: GameState, monsterMode?: MonsterMode, monsterDistance?: number): void {
     if (this.counter) this.counter.textContent = 'Записки: ' + state.notesFound + ' / ' + state.totalNotes;
+    const now = performance.now();
     const lines = [
       'ЗДОРОВЬЕ  ' + Math.ceil(state.health) + '%',
       'ВЫНОСЛИВОСТЬ  ' + Math.ceil(state.stamina) + '%',
     ];
+    if (state.flashlightOn) lines.push('ФОНАРИК  ВКЛ');
+    if (state.flashbangReadyAt > now) lines.push('ВСПЫШКА  ' + Math.ceil((state.flashbangReadyAt - now) / 1000) + 'с');
+    if (state.radarReadyAt > now && state.radarUntil <= now) lines.push('ЭМП  ' + Math.ceil((state.radarReadyAt - now) / 1000) + 'с');
     if (state.substationPowered) lines.push('ПОДСТАНЦИЯ  ВКЛ');
-    if (state.radarUntil > performance.now()) lines.push('ЭМП  СКАНИРОВАНИЕ');
+    if (state.radarUntil > now) lines.push('ЭМП  СКАНИРОВАНИЕ');
     if (monsterMode) {
       const labels: Record<MonsterMode, string> = {
         patrol: 'ПАТРУЛЬ', investigate_sound: 'ИЩЕТ ВАС', investigate_light: 'ИЩЕТ СВЕТ',
