@@ -138,7 +138,7 @@ export class Monster {
     const origin = this.mesh.position.add(new Vector3(0, 3.0, 0));
     const direction = this.player.position.subtract(origin).normalize();
     const ray = new Ray(origin, direction, distance);
-    const hit = this.scene.pickWithRay(ray, mesh => mesh.isEnabled() && mesh.checkCollisions && mesh !== this.mesh);
+    const hit = this.scene.pickWithRay(ray, mesh => mesh.isEnabled() && mesh.checkCollisions && mesh !== this.mesh && mesh.name !== 'terrain' && mesh.name !== 'main-road');
     return !hit?.hit || (hit.distance ?? distance) >= distance - .8;
   }
 
