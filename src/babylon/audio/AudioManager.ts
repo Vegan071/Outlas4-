@@ -39,7 +39,7 @@ export class AudioManager {
 
   constructor(private readonly scene: Scene) {
     for (const [id, url] of Object.entries(FILES)) {
-      const loop = ['ambience', 'drone', 'wind', 'heartbeat', 'footsteps', 'running', 'gravelFootsteps', 'gravelRunning'].includes(id);
+      const loop = ['ambience', 'drone', 'heartbeat', 'footsteps', 'running', 'gravelFootsteps', 'gravelRunning'].includes(id);
       const volume = id === 'ambience' ? .34 : id === 'drone' ? .22 : id === 'wind' ? .2 :
         id === 'heartbeat' ? .0 : id === 'footsteps' || id === 'running' ? .42 : .75;
       try {
