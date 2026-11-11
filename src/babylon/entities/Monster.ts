@@ -3,7 +3,6 @@ import type { Scene } from '@babylonjs/core/scene';
 import type { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
 
 export type MonsterMode = 'patrol' | 'investigate_sound' | 'investigate_light' | 'ambush' | 'chase' | 'stunned';
-type Obstacle = { mesh: Mesh; radius: number };
 
 /**
  * Wendigo FSM port: patrol, sound/light investigation, ambush, pursuit and flash stun.
@@ -20,11 +19,14 @@ export class Monster {
   private patrolWait = 0;
   private chaseUntil = 0;
   private lastPerception = 0;
-  private readonly blockers: Mesh[] = [];
   private readonly parts: { head: Mesh; jaw: Mesh; leftArm: Mesh; rightArm: Mesh; leftLeg: Mesh; rightLeg: Mesh; heart: Mesh };
   private readonly material: StandardMaterial;
 
-  constructor(private readonly scene: Scene, private readonly player: UniversalCamera) {
+  constructor(
+    private readonly scene: Scene,
+    private readonly player: UniversalCamera,
+    private readonly terrainHeight: (x: number, z: number) => number = () => 0,
+  ) {
     this.material = new StandardMaterial('wendigo-hide', scene);
     this.material.diffuseColor = new Color3(.12, .095, .075);
     this.material.specularColor = new Color3(.08, .06, .05);
@@ -57,20 +59,11 @@ export class Monster {
       const horn = MeshBuilder.CreateCylinder('wendigo-horn-' + side, { height: .85, diameterTop: 0, diameterBottom: .14, tessellation: 5 }, scene);
       horn.parent = head; horn.position.set(side * .25, .52, -.02); horn.rotation.z = side * -.35; horn.material = this.material; horn.isPickable = false;
     }
-    this.refreshBlockers();
-  }
-
-  private refreshBlockers(): void {
-    this.blockers.length = 0;
-    for (const mesh of this.scene.meshes) {
-      if (mesh === this.mesh || !mesh.isEnabled() || !mesh.checkCollisions) continue;
-      this.blockers.push(mesh as Mesh);
-    }
   }
 
   spawn(player = this.player.position): void {
-    const angle = Math.random() * Math.PI * 2;
-    this.mesh.position.set(player.x + Math.cos(angle) * 85, 1.4, player.z + Math.sin(angle) * 85);
+    const z = Math.max(-300, Math.min(300, player.z + (Math.random() > .5 ? 85 : -85)));
+    this.mesh.position.set(0, this.terrainHeight(0, z) + 1.4, z);
     this.mesh.setEnabled(true); this.mesh.isVisible = true;
     this.mode = 'patrol'; this.patrolWait = 0; this.pickPatrolTarget(player);
   }
@@ -80,15 +73,15 @@ export class Monster {
   private pickPatrolTarget(player: Vector3): void {
     const angle = Math.random() * Math.PI * 2, distance = 25 + Math.random() * 55;
     this.target.set(
-      Math.max(-210, Math.min(210, player.x + Math.cos(angle) * distance)),
+      Math.max(-220, Math.min(220, player.x + Math.cos(angle) * distance)),
       0,
-      Math.max(-210, Math.min(210, player.z + Math.sin(angle) * distance)),
+      Math.max(-220, Math.min(220, player.z + Math.sin(angle) * distance)),
     );
   }
 
   private hasLineOfSight(distance: number, range: number): boolean {
     if (distance > range) return false;
-    const origin = this.mesh.position.add(new Vector3(0, 1.1, 0));
+    const origin = this.mesh.position.add(new Vector3(0, 3.0, 0));
     const direction = this.player.position.subtract(origin).normalize();
     const ray = new Ray(origin, direction, distance);
     const hit = this.scene.pickWithRay(ray, mesh => mesh.isEnabled() && mesh.checkCollisions && mesh !== this.mesh);
@@ -107,9 +100,12 @@ export class Monster {
     const distance = Vector3.Distance(this.mesh.position, this.player.position);
     if (now - this.lastPerception > 280) {
       this.lastPerception = now;
-      const canSee = this.hasLineOfSight(distance, flashlightOn ? 60 : 34);
-      const lightSpotted = !canSee && flashlightOn && distance < 60;
-      const hearingRange = playerNoise >= 3 ? 90 : playerNoise === 2 ? 58 : playerNoise === 1 ? 24 : 0;
+      const canSee = this.hasLineOfSight(distance, flashlightOn ? 39 : 17);
+      const forward = this.player.getForwardRay().direction;
+      const lightX = this.player.position.x + forward.x * 18;
+      const lightZ = this.player.position.z + forward.z * 18;
+      const lightSpotted = !canSee && flashlightOn && distance < 60 && Math.hypot(this.mesh.position.x - lightX, this.mesh.position.z - lightZ) < 22;
+      const hearingRange = playerNoise >= 3 ? 75 : playerNoise === 2 ? 55 : playerNoise === 1 ? 20 : 0;
       const heard = !canSee && hearingRange > 0 && distance < hearingRange;
       if (canSee) {
         this.mode = 'chase'; this.target.copyFrom(this.player.position); this.chaseUntil = now + 2000;
@@ -137,18 +133,18 @@ export class Monster {
       this.patrolWait -= dt;
       if (this.patrolWait > 0) return;
       if (Vector3.Distance(this.mesh.position, this.target) < 3) {
-        this.patrolWait = 1.8 + Math.random() * 2.4;
+        this.patrolWait = .2;
         this.pickPatrolTarget(this.player.position);
       }
     }
 
     if (this.mode === 'ambush') { this.animate(now, 0); return; }
-    const speed = this.mode === 'chase' ? 6.8 : this.mode === 'investigate_sound' || this.mode === 'investigate_light' ? 3.3 : 1.65;
+    const speed = this.mode === 'chase' ? 13.8 : this.mode === 'investigate_sound' || this.mode === 'investigate_light' ? 7.4 : 4.5;
     this.move(dt, speed, this.mode === 'chase' || this.mode === 'investigate_sound' || this.mode === 'investigate_light');
     this.animate(now, speed);
   }
 
-  private move(dt: number, speed: number, seeking: boolean): void {
+  private move(dt: number, speed: number, _seeking: boolean): void {
     const direction = this.target.subtract(this.mesh.position); direction.y = 0;
     if (direction.lengthSquared() < .01) return;
     direction.normalize();
@@ -162,7 +158,7 @@ export class Monster {
       direction = (leftHit?.distance ?? 999) > (rightHit?.distance ?? 999) ? left : right;
     }
     this.mesh.position.addInPlace(direction.scale(speed * dt));
-    this.mesh.position.y = 1.4 + Math.sin(performance.now() * .004) * .035;
+    this.mesh.position.y = this.terrainHeight(this.mesh.position.x, this.mesh.position.z) + (this.mode === 'ambush' ? .55 : 1.4) + Math.sin(performance.now() * .004) * .035;
     const desired = Math.atan2(direction.x, direction.z);
     let delta = desired - this.mesh.rotation.y;
     while (delta > Math.PI) delta -= Math.PI * 2;
