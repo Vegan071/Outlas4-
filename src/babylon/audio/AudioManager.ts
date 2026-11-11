@@ -67,7 +67,7 @@ export class AudioManager {
   playEvent(event: EventName, intensity = 1): void {
     const ids: Record<EventName, string> = {
       step: 'footsteps', twig: 'twig', roar: 'growl', whisper: 'wind',
-      heartbeat: 'heartbeat', flash: '', jumpscare: 'stinger', siren: 'thunder',
+      heartbeat: 'heartbeat', flash: '', jumpscare: 'stinger', siren: '',
       thunder: 'thunder', creak: 'creak',
     };
     const id = ids[event];
@@ -93,10 +93,9 @@ export class AudioManager {
     if (this.footstepsActive && this.runningFootsteps === running) return;
     if (this.footstepsActive) this.stopSound(this.runningFootsteps ? 'running' : 'footsteps');
     const sound = this.sounds.get(id);
-    if (sound?.isReady()) {
-      sound.setVolume(this.master * (running ? .58 : .4));
-      sound.play();
-    }
+    if (!sound?.isReady()) { this.footstepsActive = false; return; }
+    sound.setVolume(this.master * (running ? .58 : .4));
+    sound.play();
     this.footstepsActive = true;
     this.runningFootsteps = running;
   }
