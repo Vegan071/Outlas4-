@@ -32,7 +32,7 @@ function bootstrap(): void {
     const state = createGameState();
     const notes = new NotesManager(scene, worldLayout);
     const gadgets = new Gadgets(scene, camera, state);
-    const monster = new Monster(scene, camera, worldLayout.terrainHeight, worldLayout.textures);
+    const monster = new Monster(scene, camera, worldLayout);
     const equipment = new FirstPersonEquipment(scene, camera, state, notes, monster, worldLayout);
     state.flashlightOn = gadgets.toggleFlashlight();
     equipment.setFlashlight(state.flashlightOn);
