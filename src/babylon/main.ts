@@ -203,7 +203,7 @@ function bootstrap(): void {
       if (!grounded || jumpVelocity > 0) {
         jumpVelocity -= 26 * dt;
         camera.position.y += jumpVelocity * dt;
-        const floorY = worldLayout.terrainHeight(camera.position.x, camera.position.z) + 1.8;
+        const floorY = worldLayout.terrainHeight(camera.position.x, camera.position.z) + 2.0;
         if (camera.position.y <= floorY) { camera.position.y = floorY; jumpVelocity = 0; grounded = true; }
       }
 
