@@ -8,6 +8,7 @@ import { AssetLoader } from './assets/AssetLoader';
 import { createGameState } from './game/GameState';
 import { NotesManager } from './game/NotesManager';
 import { Gadgets } from './game/Gadgets';
+import { FirstPersonEquipment } from './game/FirstPersonEquipment';
 import { SaveManager } from './game/SaveManager';
 import { GameSettings } from './game/GameSettings';
 import { Monster } from './entities/Monster';
@@ -29,6 +30,7 @@ function bootstrap(): void {
     const notes = new NotesManager(scene, worldLayout);
     const gadgets = new Gadgets(scene, camera, state);
     const monster = new Monster(scene, camera, worldLayout.terrainHeight);
+    const equipment = new FirstPersonEquipment(scene, camera, state, notes, monster, worldLayout);
     const phantom = new Phantom(scene, camera);
     const jumpscare = new Jumpscare(scene, camera);
     const audio = new AudioManager(scene);
@@ -104,6 +106,7 @@ function bootstrap(): void {
       if (e.code === 'Space' && grounded) { jumpVelocity = 10.8; grounded = false; e.preventDefault(); }
       if (e.code === 'KeyF') {
         state.flashlightOn = gadgets.toggleFlashlight();
+        equipment.setFlashlight(state.flashlightOn);
         hud.notify(state.flashlightOn ? 'Фонарик включён — Вендиго может заметить свет' : 'Фонарик выключен');
       }
       if (e.code === 'KeyR') {
@@ -208,6 +211,7 @@ function bootstrap(): void {
         playerNoise = 3; twigCooldown = 4; audio.playEvent('twig', .85);
       }
       audio.setFootsteps(isMoving, canSprint);
+      equipment.update(dt, now, isMoving, canSprint, camera.position, camera.getForwardRay().direction);
       monster.update(dt, now, state.flashlightOn, canSprint, playerNoise);
       if (monster.mode !== lastMonsterMode) {
         if (monster.mode === 'chase') { audio.playEvent('roar', .9); audio.setChaseState(true); }
@@ -241,9 +245,9 @@ function bootstrap(): void {
     });
 
     engine.runRenderLoop(() => scene.render());
-    if (import.meta.env.DEV) Object.assign(window, { __ponrBabylon: { engine, scene, camera, state, notes, monster, phantom, jumpscare, audio, assets, gadgets, settings } });
+    if (import.meta.env.DEV) Object.assign(window, { __ponrBabylon: { engine, scene, camera, state, notes, monster, phantom, jumpscare, audio, assets, gadgets, settings, equipment } });
     window.addEventListener('beforeunload', () => {
-      save.save(state); gadgets.dispose(); monster.dispose(); phantom.dispose(); jumpscare.dispose();
+      save.save(state); equipment.dispose(); gadgets.dispose(); monster.dispose(); phantom.dispose(); jumpscare.dispose();
       audio.dispose(); scene.dispose(); engine.dispose();
     });
   } catch (error) {
