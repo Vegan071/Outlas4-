@@ -1,7 +1,7 @@
 // Экран ЭМП-детектора: радар рисуется на canvas и показывается как текстура на 3D-модели.
 
 import * as THREE from 'three';
-import { POI } from '../config.js';
+import { POI, RADAR } from '../config.js';
 import { ai, ctx, game, world } from '../state.js';
 import { police } from './policeCar.js';
 import { monsterRig } from './monster.js';
@@ -16,6 +16,7 @@ let canvas = null;
 let g = null;
 let texture = null;
 let sweepAngle = 0;
+let idleKey = null; // что сейчас нарисовано на погасшем экране
 
 const forward = new THREE.Vector3();
 const right = new THREE.Vector3();
@@ -43,11 +44,44 @@ const dot = (p, color, r) => {
   g.beginPath(); g.arc(p.x, p.y, r, 0, Math.PI * 2); g.fill();
 };
 
+/** Погасший экран: показывает, сколько осталось до перезарядки. Перерисовывается только при смене надписи. */
+function drawIdleScreen() {
+  const ready = game.radarCooldown <= 0;
+  const key = ready ? 'ready' : Math.ceil(game.radarCooldown);
+  if (key === idleKey) return;
+  idleKey = key;
+
+  g.fillStyle = '#010806';
+  g.fillRect(0, 0, W, H);
+  g.textAlign = 'center';
+  g.fillStyle = ready ? '#00ffcc' : '#ff8844';
+  g.font = 'bold 14px Courier New';
+  g.fillText(ready ? 'ГОТОВ' : 'ЗАРЯДКА', CX, CY - 4);
+  g.font = 'bold 22px Courier New';
+  g.fillText(ready ? '[Q]' : `${key}с`, CX, CY + 24);
+  g.fillStyle = '#1a3a30';
+  g.font = '10px Courier New';
+  g.fillText('ЭМП-РАДАР', CX, 152);
+  texture.needsUpdate = true;
+}
+
 export function drawEmpScreen(delta, player) {
   if (!g) return;
 
+  // Радар работает только пока идёт окно обзора (RADAR.DURATION секунд после нажатия Q)
+  if (game.radarActive <= 0) {
+    drawIdleScreen();
+    return;
+  }
+  idleKey = null;
+
   g.fillStyle = '#031610';
   g.fillRect(0, 0, W, H);
+
+  // полоска оставшегося времени; в последнюю секунду экран мигает
+  const left = game.radarActive / RADAR.DURATION;
+  g.fillStyle = game.radarActive < 1 && Math.floor(game.radarActive * 8) % 2 === 0 ? '#ff4422' : '#00ffcc';
+  g.fillRect(14, 4, (W - 28) * left, 5);
 
   // сетка
   g.strokeStyle = 'rgba(0,255,170,.35)';

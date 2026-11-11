@@ -35,6 +35,7 @@ export const game = {
   substationPowered: false,
 
   flashlightOn: true,
+  radarActive: 0, // сколько секунд ещё работает экран радара (0 — выключен)
   radarCooldown: 0,
   flashbangCooldown: 0,
 

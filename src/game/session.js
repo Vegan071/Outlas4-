@@ -52,7 +52,7 @@ function buildGame() {
   setFlashlight(true);
   hud.setNoteCounter(0, game.totalNotes);
   hud.setSubstationStatus(false);
-  hud.setRadarStatus(0);
+  hud.setRadarStatus(0, 0);
   hud.setFlashbangStatus(0);
   hud.setSanity('СПИТ', '#aaaaaa');
 }
@@ -63,7 +63,7 @@ function onLock() {
   if (!game.initialized) {
     buildGame();
     game.initialized = true;
-    hud.showSystemMsg('Закат. Следите за экраном ЭМП в левой руке! В лесу есть подстанция и вышка.', 6000);
+    hud.showSystemMsg('Закат. Нажмите [Q] — ЭМП-радар в левой руке покажет цели на 5 секунд. В лесу есть подстанция и вышка.', 6000);
   }
   game.active = true;
   resumeAudio();
