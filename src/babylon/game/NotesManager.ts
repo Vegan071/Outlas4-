@@ -31,5 +31,5 @@ export class NotesManager {
     return best;
   }
   collect(note:Note):string { note.collected=true; note.mesh.dispose(); return note.text; }
-  get count():number{return this.notes.filter(n=>n.collected).length;}
+  restore(count:number):void{for(const note of this.notes.slice(0,Math.max(0,Math.min(count,this.notes.length)))){note.collected=true;note.mesh.dispose();}}\n  get count():number{return this.notes.filter(n=>n.collected).length;}
 }
