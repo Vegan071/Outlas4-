@@ -238,6 +238,15 @@ export function createWorld(scene: Scene): WorldLayout {
   makeBox(scene, 'police-car-roof', 1.75, .65, 2.1, 0, 1.5, -.15, glass).parent = policeCar;
   makeBox(scene, 'police-car-stripe', 2.12, .18, 4.42, 0, .82, 0, material(scene, 'police-car-stripe-mat', new Color3(.04, .12, .55))).parent = policeCar;
   const lightbar = makeBox(scene, 'police-lightbar', 1.4, .15, .4, 0, 1.6, -.2, black); lightbar.parent = policeCar;
+  const redLensMat = material(scene, 'police-red-lens', new Color3(.65, .01, .01)); redLensMat.emissiveColor = new Color3(.8, .005, 0);
+  const blueLensMat = material(scene, 'police-blue-lens', new Color3(.01, .04, .65)); blueLensMat.emissiveColor = new Color3(.005, .04, .8);
+  const redLens = makeBox(scene, 'police-red-lens-mesh', .6, .15, .42, -.35, 1.6, -.2, redLensMat); redLens.parent = policeCar;
+  const blueLens = makeBox(scene, 'police-blue-lens-mesh', .6, .15, .42, .35, 1.6, -.2, blueLensMat); blueLens.parent = policeCar;
+  const policeTire = material(scene, 'police-tire', new Color3(.01, .01, .01));
+  for (const [x, z] of [[-.95, 1.35], [.95, 1.35], [-.95, -1.35], [.95, -1.35]]) {
+    const wheel = MeshBuilder.CreateCylinder('police-wheel', { height: .22, diameter: .66, tessellation: 10 }, scene);
+    wheel.parent = policeCar; wheel.position.set(x, .32, z); wheel.rotation.z = Math.PI / 2; wheel.material = policeTire;
+  }
   const red = new PointLight('siren-red', new Vector3(-.6, 2.2, -.2), scene); red.parent = policeCar; red.diffuse = new Color3(1, .02, .01); red.intensity = 0; red.range = 45;
   const blue = new PointLight('siren-blue', new Vector3(.6, 2.2, -.2), scene); blue.parent = policeCar; blue.diffuse = new Color3(.02, .12, 1); blue.intensity = 0; blue.range = 45;
   const spawnPoliceCar = (): Vector3 => {
@@ -258,6 +267,8 @@ export function createWorld(scene: Scene): WorldLayout {
     if (!policeCar.isEnabled()) return 0;
     const phase = Math.floor((time / 1000) * 6) % 2 === 0;
     red.intensity = phase ? 5 : 0; blue.intensity = phase ? 0 : 5;
+    redLensMat.emissiveColor = phase ? new Color3(.8, .005, 0) : Color3.Black();
+    blueLensMat.emissiveColor = phase ? Color3.Black() : new Color3(.005, .04, .8);
     const distance = Vector3.Distance(player, policeCar.position);
     return distance < 95 ? .38 * (1 - distance / 95) : 0;
   };
