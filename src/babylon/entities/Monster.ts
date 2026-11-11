@@ -1,7 +1,8 @@
 import { Color3, Mesh, MeshBuilder, PointLight, Ray, StandardMaterial, TransformNode, Vector3 } from '@babylonjs/core';
 import type { Scene } from '@babylonjs/core/scene';
 import type { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
-import type { WorldTextures } from '../world/createTextures';
+import * as YUKA from 'yuka';
+import type { WorldLayout } from '../world/createWorld';
 
 export type MonsterMode = 'patrol' | 'investigate_sound' | 'investigate_light' | 'ambush' | 'chase' | 'stunned';
 
@@ -22,17 +23,22 @@ export class Monster {
   private lastPerception = 0;
   private readonly parts: { head: Mesh; jaw: Mesh; leftArm: Mesh; rightArm: Mesh; leftLeg: Mesh; rightLeg: Mesh; heart: Mesh };
   private readonly material: StandardMaterial;
+  private readonly terrainHeight: (x: number, z: number) => number;
+  private manager!: YUKA.EntityManager;
+  private vehicle!: YUKA.Vehicle;
+  private seek!: YUKA.SeekBehavior;
+  private wander!: YUKA.WanderBehavior;
 
   constructor(
     private readonly scene: Scene,
     private readonly player: UniversalCamera,
-    private readonly terrainHeight: (x: number, z: number) => number = () => 0,
-    textures?: WorldTextures,
+    world: WorldLayout,
   ) {
+    this.terrainHeight = world.terrainHeight;
     this.material = new StandardMaterial('wendigo-hide', scene);
     this.material.diffuseColor = new Color3(.12, .095, .075);
     this.material.specularColor = new Color3(.08, .06, .05);
-    if (textures) this.material.diffuseTexture = textures.monsterSkin;
+    this.material.diffuseTexture = world.textures.monsterSkin;
     this.mesh = MeshBuilder.CreateBox('wendigo-root', { width: .9, height: 2.8, depth: .62 }, scene);
     this.mesh.isVisible = false;
     this.mesh.setEnabled(false);
@@ -44,10 +50,10 @@ export class Monster {
     head.parent = this.mesh; head.position.set(0, 1.45, .04); head.material = this.material; head.isPickable = false;
     const bone = new StandardMaterial('wendigo-bone', scene);
     bone.diffuseColor = new Color3(.8, .8, .8); bone.specularColor = new Color3(.12, .1, .08);
-    if (textures) bone.diffuseTexture = textures.monsterBone;
+    bone.diffuseTexture = world.textures.monsterBone;
     const darkFlesh = new StandardMaterial('wendigo-dark-flesh', scene);
     darkFlesh.diffuseColor = new Color3(.45, .35, .3); darkFlesh.specularColor = new Color3(.22, .025, .02);
-    if (textures) darkFlesh.diffuseTexture = textures.monsterSkin;
+    darkFlesh.diffuseTexture = world.textures.monsterSkin;
     const eyeBlack = new StandardMaterial('wendigo-eye-socket', scene);
     eyeBlack.diffuseColor = new Color3(.008, .002, .002);
     const makeDetail = (mesh: Mesh, parent: TransformNode, position: Vector3, mat: StandardMaterial): Mesh => {
@@ -110,6 +116,7 @@ export class Monster {
     const heart = MeshBuilder.CreateSphere('wendigo-heart', { diameter: .18, segments: 6 }, scene);
     heart.parent = this.mesh; heart.position.set(0, .1, .38); heart.material = this.material; heart.isPickable = false;
     this.parts = { head, jaw, leftArm, rightArm, leftLeg, rightLeg, heart };
+    this.initSteering(world);
     for (const side of [-1, 1]) {
       const eyeMat = new StandardMaterial('wendigo-eye-' + side, scene);
       eyeMat.emissiveColor = new Color3(.9, .015, .005);
@@ -120,9 +127,30 @@ export class Monster {
     }
   }
 
+  private initSteering(world: WorldLayout): void {
+    this.manager = new YUKA.EntityManager();
+    this.vehicle = new YUKA.Vehicle();
+    this.vehicle.maxSpeed = 4.5; this.vehicle.maxForce = 24; this.vehicle.boundingRadius = 1.2;
+    this.wander = new YUKA.WanderBehavior(9, 16, 2.8);
+    this.seek = new YUKA.SeekBehavior(new YUKA.Vector3(0, 0, 0)); this.seek.weight = 0;
+    const obstacles: YUKA.GameEntity[] = [];
+    const addObstacle = (x: number, z: number, radius: number): void => {
+      const obstacle = new YUKA.GameEntity(); obstacle.position.set(x, 0, z); obstacle.boundingRadius = radius;
+      this.manager.add(obstacle); obstacles.push(obstacle);
+    };
+    world.houses.forEach(h => addObstacle(h.x, h.z, Math.max(h.width, h.depth) * .52));
+    world.cars.forEach(c => addObstacle(c.x, c.z, 2.4));
+    addObstacle(-92, -65, 4.2);
+    const avoid = new YUKA.ObstacleAvoidanceBehavior(obstacles);
+    avoid.dBoxMinLength = 5.5; avoid.weight = 2.2;
+    this.vehicle.steering.add(avoid); this.vehicle.steering.add(this.wander); this.vehicle.steering.add(this.seek);
+    this.manager.add(this.vehicle);
+  }
+
   spawn(player = this.player.position): void {
     const z = Math.max(-300, Math.min(300, player.z + (Math.random() > .5 ? 85 : -85)));
     this.mesh.position.set(0, this.terrainHeight(0, z) + 2.0, z);
+    this.vehicle.position.set(0, 0, z); this.vehicle.velocity.set(0, 0, 0);
     this.mesh.setEnabled(true); this.mesh.isVisible = false;
     this.mode = 'patrol'; this.patrolWait = 0; this.pickPatrolTarget(player);
   }
@@ -203,14 +231,23 @@ export class Monster {
       return;
     }
     const speed = this.mode === 'chase' ? 13.8 : this.mode === 'investigate_sound' || this.mode === 'investigate_light' ? 7.4 : 4.5;
-    this.move(dt, speed, this.mode === 'chase' || this.mode === 'investigate_sound' || this.mode === 'investigate_light');
+    this.move(dt, speed);
     this.animate(now, speed);
   }
 
-  private move(dt: number, speed: number, _seeking: boolean): void {
+  private move(dt: number, speed: number): void {
     let direction = this.target.subtract(this.mesh.position); direction.y = 0;
     if (direction.lengthSquared() < .01) return;
     direction.normalize();
+    const seeking = this.mode === 'chase' || this.mode === 'investigate_sound' || this.mode === 'investigate_light';
+    this.vehicle.position.set(this.mesh.position.x, 0, this.mesh.position.z);
+    this.vehicle.maxSpeed = speed;
+    this.seek.target.set(this.target.x, 0, this.target.z);
+    this.seek.weight = seeking ? 1.8 : .85;
+    this.wander.weight = seeking ? 0 : .65;
+    this.manager.update(dt);
+    const velocity = this.vehicle.velocity;
+    if (velocity.x * velocity.x + velocity.z * velocity.z > .05) direction.set(velocity.x, 0, velocity.z).normalize();
     const origin = this.mesh.position.add(new Vector3(0, .8, 0));
     const hit = this.scene.pickWithRay(new Ray(origin, direction, 4.5), mesh => mesh.isEnabled() && mesh.checkCollisions && mesh !== this.mesh);
     if (hit?.hit) {
