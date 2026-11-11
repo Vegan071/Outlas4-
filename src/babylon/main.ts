@@ -55,6 +55,8 @@ function bootstrap(): void {
     if (saved) {
       state.health = saved.health ?? 100;
       state.stamina = saved.stamina ?? 100;
+      state.substationPowered = saved.substationPowered ?? false;
+      if (state.substationPowered) worldLayout.activateSubstation();
       notes.restore(saved.notesFound ?? 0);
       state.notesFound = notes.count;
       if (state.notesFound >= 10) worldLayout.spawnPoliceCar();
@@ -136,9 +138,10 @@ function bootstrap(): void {
             audio.startSiren();
             hud.notify('Все десять записок собраны. Ищите полицейскую сирену на окраине!', 5000);
           }
-        } else if (!state.substationPowered && Vector3.Distance(camera.position, new Vector3(-87, 1, -61)) < 4.5) {
+        } else if (!state.substationPowered && Vector3.Distance(camera.position, new Vector3(-88.5, worldLayout.terrainHeight(-92, -65) + 1.6, -65)) < 4.5) {
           state.substationPowered = true;
           worldLayout.activateSubstation();
+          save.save(state);
           hud.notify('Подстанция запущена. Прожекторы города включены, радар перезаряжается быстрее.');
         } else if (state.notesFound >= 10 && Vector3.Distance(camera.position, worldLayout.policeCarPosition()) < 5.5) {
           state.phase = 'won';
@@ -178,7 +181,7 @@ function bootstrap(): void {
 
       if (grounded) camera.position.y = worldLayout.terrainHeight(camera.position.x, camera.position.z) + 1.8;
       const note = notes.nearest(camera.position, 3.6);
-      const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(-87, 1, -61)) < 4.5;
+      const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(-88.5, worldLayout.terrainHeight(-92, -65) + 1.6, -65)) < 4.5;
       const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, worldLayout.policeCarPosition()) < 5.5;
       hud.showInteraction(note ? '[E] Прочитать записку' : nearStation ? '[E] Включить подстанцию' : nearCar ? '[E] Уехать на полицейской машине' : '');
       const movedDistance = Vector3.DistanceSquared(camera.position, previousPlayerPosition);
@@ -216,7 +219,6 @@ function bootstrap(): void {
       }
       if (now > flashPulseUntil) { /* flash pulse is intentionally brief */ }
       hud.update(state);
-      if (state.radarUntil > now) hud.notify('ЭМП-радар активен', 150);
     });
 
     engine.runRenderLoop(() => scene.render());
