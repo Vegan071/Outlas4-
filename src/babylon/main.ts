@@ -57,7 +57,7 @@ function bootstrap(): void {
       state.stamina = saved.stamina ?? 100;
       notes.restore(saved.notesFound ?? 0);
       state.notesFound = notes.count;
-      if (state.notesFound >= 10) scene.getTransformNodeByName('police-car')?.setEnabled(true);
+      if (state.notesFound >= 10) worldLayout.spawnPoliceCar();
       hud.update(state);
     }
 
@@ -74,7 +74,7 @@ function bootstrap(): void {
       if (layer) layer.style.display = 'block';
       canvas.requestPointerLock?.();
       canvas.focus();
-      void audio.unlock();
+      void audio.unlock().then(() => { if (state.notesFound >= 10) audio.startSiren(); });
       audio.startAmbience();
     };
     start?.addEventListener('click', startGame);
@@ -115,7 +115,7 @@ function bootstrap(): void {
       if (e.code === 'KeyQ') {
         if (gadgets.radar(now)) {
           const target = state.notesFound >= 10
-            ? scene.getTransformNodeByName('police-car')?.position
+            ? worldLayout.policeCarPosition()
             : notes.nearest(camera.position, 100)?.mesh.position;
           if (target) {
             const delta = target.subtract(camera.position);
@@ -133,14 +133,15 @@ function bootstrap(): void {
           hud.update(state);
           save.save(state);
           if (state.notesFound === 10) {
-            scene.getTransformNodeByName('police-car')?.setEnabled(true);
-            hud.notify('Все десять записок собраны. Полицейская машина ждёт у дороги!', 5000);
+            worldLayout.spawnPoliceCar();
+            audio.startSiren();
+            hud.notify('Все десять записок собраны. Ищите полицейскую сирену на окраине!', 5000);
           }
         } else if (!state.substationPowered && Vector3.Distance(camera.position, new Vector3(-87, 1, -61)) < 4.5) {
           state.substationPowered = true;
           worldLayout.activateSubstation();
           hud.notify('Подстанция запущена. Прожекторы города включены, радар перезаряжается быстрее.');
-        } else if (state.notesFound >= 10 && Vector3.Distance(camera.position, new Vector3(0, 1, 3)) < 5.5) {
+        } else if (state.notesFound >= 10 && Vector3.Distance(camera.position, worldLayout.policeCarPosition()) < 5.5) {
           state.phase = 'won';
           showMenu('Вы спаслись', 'Играть снова');
         }
@@ -178,7 +179,7 @@ function bootstrap(): void {
 
       const note = notes.nearest(camera.position, 3.6);
       const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(-87, 1, -61)) < 4.5;
-      const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, new Vector3(0, 1, 3)) < 5.5;
+      const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, worldLayout.policeCarPosition()) < 5.5;
       hud.showInteraction(note ? '[E] Прочитать записку' : nearStation ? '[E] Включить подстанцию' : nearCar ? '[E] Уехать на полицейской машине' : '');
       const movedDistance = Vector3.DistanceSquared(camera.position, previousPlayerPosition);
       const isMoving = movedDistance > .0008;
@@ -187,7 +188,8 @@ function bootstrap(): void {
       audio.setFootsteps(isMoving, canSprint);
       monster.update(dt, now, state.flashlightOn, canSprint, playerNoise);
       if (monster.mode !== lastMonsterMode) {
-        if (monster.mode === 'chase') audio.playEvent('roar', .9);
+        if (monster.mode === 'chase') { audio.playEvent('roar', .9); audio.setChaseState(true); }
+        else if (lastMonsterMode === 'chase') audio.setChaseState(false);
         if (monster.mode === 'investigate_sound' || monster.mode === 'investigate_light') audio.playEvent('twig', .45);
         lastMonsterMode = monster.mode;
       }
@@ -195,6 +197,7 @@ function bootstrap(): void {
       audio.setHeartbeat(closeToMonster && monster.mode === 'chase');
       if (phantom.update(dt, isNight, camera.position)) audio.playEvent('whisper', .7);
 
+      audio.setSirenVolume(worldLayout.updatePoliceCar(now, camera.position));
       const distance = Vector3.Distance(monster.mesh.position, camera.position);
       if (!jumpscare.active && monster.mode === 'chase' && distance < 2.2) {
         jumpscare.start();
