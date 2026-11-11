@@ -4,7 +4,7 @@ All listed files are served from SFXMint and are dedicated to the public domain 
 
 | In-game use | File |
 |---|---|
-| Forest night ambience | [Dripping Basement Haunted Ambience 81](https://sfxmint.com/sounds/horror-ambience-dark-81) |
+| Forest night ambience | [Night Forest Unease Haunted Ambience 50](https://sfxmint.com/sounds/horror-ambience-dark-50) |
 | Low tension bed | [Pulsing Dread Dark Horror Drone 25](https://sfxmint.com/sounds/horror-drone-25) |
 | Jumpscare | [Dissonant Orchestral-Style Horror Stinger Hit 54](https://sfxmint.com/sounds/horror-stinger-54) |
 | Proximity heartbeat | [Accelerating Panic Heartbeat 73](https://sfxmint.com/sounds/horror-heartbeat-73) |
