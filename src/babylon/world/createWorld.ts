@@ -3,6 +3,7 @@ import {
   Quaternion, Scene, StandardMaterial, TransformNode, Vector3, VertexBuffer, VertexData,
 } from '@babylonjs/core';
 import { createNoise2D } from 'simplex-noise';
+import { createWorldTextures, type WorldTextures } from './createTextures';
 
 export interface WorldTree { x: number; z: number; y: number; radius: number }
 export interface WorldHouse { x: number; z: number; width: number; depth: number; height: number }
@@ -14,6 +15,7 @@ export interface WorldLayout {
   terrainHeight: (x: number, z: number) => number;
   updateAtmosphere: (delta: number, progress: number, player: Vector3) => void;
   activateSubstation: () => void;
+  textures: WorldTextures;
   spawnPoliceCar: () => Vector3;
   updatePoliceCar: (time: number, player: Vector3) => number;
   policeCarPosition: () => Vector3;
@@ -50,6 +52,7 @@ function makeBox(scene: Scene, name: string, width: number, height: number, dept
 }
 
 export function createWorld(scene: Scene): WorldLayout {
+  const textures = createWorldTextures(scene);
   const random = mulberry32(0x504f4e52);
   const noise = createNoise2D(random);
   const terrainHeight = (x: number, z: number): number => {
@@ -72,19 +75,24 @@ export function createWorld(scene: Scene): WorldLayout {
     const normals: number[] = [];
     if (indices) { VertexData.ComputeNormals(positions, indices, normals); ground.setVerticesData(VertexBuffer.NormalKind, normals, true); }
   }
-  ground.material = material(scene, 'terrain-material', new Color3(.075, .09, .06));
+  const groundMaterial = material(scene, 'terrain-material', new Color3(.75, .75, .75));
+  groundMaterial.diffuseTexture = textures.ground; textures.ground.uScale = 75; textures.ground.vScale = 75;
+  ground.material = groundMaterial;
   ground.checkCollisions = true;
   ground.isPickable = true;
 
   // Main road, sidewalks and road edge barriers.
   const road = MeshBuilder.CreateGround('main-road', { width: 16, height: 500, subdivisions: 1 }, scene);
-  road.position.y = .055; road.material = material(scene, 'road-asphalt', new Color3(.105, .105, .10));
+  road.position.y = .055;
+  const roadMaterial = material(scene, 'road-asphalt', new Color3(.85, .85, .85));
+  roadMaterial.diffuseTexture = textures.asphalt; textures.asphalt.uScale = 1; textures.asphalt.vScale = 28;
+  road.material = roadMaterial;
   for (const x of [-10.5, 10.5]) {
     makeBox(scene, 'road-curb-' + x, 5, .22, 500, x, .11, 0, material(scene, 'curb-material-' + x, new Color3(.25, .25, .24)));
   }
 
   // Original forest: 800 pines outside the city/road corridor and clearings around POIs.
-  const treeMat = material(scene, 'bark', new Color3(.105, .062, .038));
+  const treeMat = material(scene, 'bark', new Color3(.8, .8, .8)); treeMat.diffuseTexture = textures.bark;
   const leafMat = material(scene, 'pine-needles', new Color3(.018, .065, .038));
   const trunk = MeshBuilder.CreateCylinder('pine-trunk-instances', { height: 1, diameterTop: 3.6, diameterBottom: 4.2, tessellation: 7 }, scene);
   const crownA = MeshBuilder.CreateCylinder('pine-crown-lower', { height: 1, diameterTop: 0, diameterBottom: 21, tessellation: 6 }, scene);
@@ -116,7 +124,7 @@ export function createWorld(scene: Scene): WorldLayout {
 
   // City blocks: two rows of tall abandoned buildings, with collision walls.
   const houses: WorldHouse[] = [];
-  const buildingMaterial = material(scene, 'abandoned-building', new Color3(.16, .145, .12));
+  const buildingMaterial = material(scene, 'abandoned-building', new Color3(.8, .8, .8)); buildingMaterial.diffuseTexture = textures.building; textures.building.uScale = 2; textures.building.vScale = 3;
   const roofMaterial = material(scene, 'building-roof', new Color3(.045, .05, .05));
   for (let z = -180; z < 180; z += 45) {
     if (Math.abs(z) <= 15) continue;
@@ -126,7 +134,7 @@ export function createWorld(scene: Scene): WorldLayout {
       const house = { x, z, width, depth, height }; houses.push(house);
       makeBox(scene, 'building-roof-' + x + '-' + z, width + .35, .25, depth + .35, x, height + .12, z, roofMaterial);
       if (random() > .45) {
-        const graffiti = makeBox(scene, 'building-graffiti-' + x + '-' + z, .025, 2.5, 4, x + (x < 0 ? 1 : -1) * (width / 2 + .03), 2.4, z + (random() - .5) * 10, material(scene, 'graffiti-' + x + '-' + z, new Color3(.24, .10, .07)));
+        const graffiti = makeBox(scene, 'building-graffiti-' + x + '-' + z, .025, 2.5, 4, x + (x < 0 ? 1 : -1) * (width / 2 + .03), 2.4, z + (random() - .5) * 10, material(scene, 'graffiti-' + x + '-' + z, new Color3(.9, .9, .9)));
         graffiti.isPickable = false;
       }
     }
@@ -335,5 +343,5 @@ export function createWorld(scene: Scene): WorldLayout {
     ash.thinInstanceBufferUpdated('matrix');
   };
 
-  return { trees, houses, cars, terrainHeight, updateAtmosphere, activateSubstation, spawnPoliceCar, updatePoliceCar, policeCarPosition };
+  return { trees, houses, cars, terrainHeight, updateAtmosphere, activateSubstation, spawnPoliceCar, updatePoliceCar, policeCarPosition, textures };
 }
