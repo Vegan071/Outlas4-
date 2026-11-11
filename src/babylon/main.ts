@@ -63,7 +63,7 @@ function bootstrap():void{
    else{state.stamina=Math.min(100,state.stamina+dt*(state.substationPowered?22:15));camera.speed=.22;}
    const note=notes.nearest(camera.position,3.6);
    hud.showInteraction(note?'[E] Прочитать записку':(!state.substationPowered&&Vector3.Distance(camera.position,new Vector3(26,1,42))<4.5?'[E] Включить подстанцию':(state.notesFound>=10&&Vector3.Distance(camera.position,new Vector3(0,1,3))<5.5?'[E] Уехать на полицейской машине':'')));
-   monster.update(dt,now,state.flashlightOn);
+   monster.update(dt,now,state.flashlightOn,sprinting);
    const distance=Vector3.Distance(monster.mesh.position,camera.position);
    if(distance<1.15&&monster.mode==='chase'){state.health-=dt*35;if(state.health<=0){state.phase='lost';if(menu)menu.style.display='flex';const title=document.getElementById('menu-title');if(title)title.textContent='Вас настиг Вендиго';}}
    if(state.radarUntil>now&&now>state.radarReadyAt-10000){/* radar pulse window */}
