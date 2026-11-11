@@ -117,7 +117,7 @@ export class Monster {
 
   spawn(player = this.player.position): void {
     const z = Math.max(-300, Math.min(300, player.z + (Math.random() > .5 ? 85 : -85)));
-    this.mesh.position.set(0, this.terrainHeight(0, z) + 1.4, z);
+    this.mesh.position.set(0, this.terrainHeight(0, z) + 2.0, z);
     this.mesh.setEnabled(true); this.mesh.isVisible = false;
     this.mode = 'patrol'; this.patrolWait = 0; this.pickPatrolTarget(player);
   }
@@ -193,7 +193,7 @@ export class Monster {
     }
 
     if (this.mode === 'ambush') {
-      this.mesh.position.y = this.terrainHeight(this.mesh.position.x, this.mesh.position.z) + .55;
+      this.mesh.position.y = this.terrainHeight(this.mesh.position.x, this.mesh.position.z) + 1.15;
       this.animate(now, 0);
       return;
     }
@@ -216,7 +216,7 @@ export class Monster {
       direction = (leftHit?.distance ?? 999) > (rightHit?.distance ?? 999) ? left : right;
     }
     this.mesh.position.addInPlace(direction.scale(speed * dt));
-    this.mesh.position.y = this.terrainHeight(this.mesh.position.x, this.mesh.position.z) + (this.mode === 'ambush' ? .55 : 1.4) + Math.sin(performance.now() * .004) * .035;
+    this.mesh.position.y = this.terrainHeight(this.mesh.position.x, this.mesh.position.z) + (this.mode === 'ambush' ? 1.15 : 2.0) + Math.sin(performance.now() * .004) * .035;
     const desired = Math.atan2(direction.x, direction.z);
     let delta = desired - this.mesh.rotation.y;
     while (delta > Math.PI) delta -= Math.PI * 2;
