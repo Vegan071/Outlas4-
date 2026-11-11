@@ -31,6 +31,9 @@ export class AudioManager {
   private ambienceRequested = false;
   private footstepsActive = false;
   private runningFootsteps = false;
+  private sirenGain: GainNode | null = null;
+  private sirenOscillator: OscillatorNode | null = null;
+  private sirenLfo: OscillatorNode | null = null;
 
   constructor(private readonly scene: Scene) {
     for (const [id, url] of Object.entries(FILES)) {
@@ -105,6 +108,26 @@ export class AudioManager {
     this.runningFootsteps = running;
   }
 
+  startSiren(): void {
+    if (!this.context || this.sirenGain) return;
+    const ctx = this.context;
+    this.sirenGain = ctx.createGain(); this.sirenGain.gain.value = 0; this.sirenGain.connect(ctx.destination);
+    this.sirenOscillator = ctx.createOscillator(); this.sirenOscillator.type = 'square'; this.sirenOscillator.frequency.value = 680;
+    this.sirenLfo = ctx.createOscillator(); this.sirenLfo.type = 'sine'; this.sirenLfo.frequency.value = 2.2;
+    const depth = ctx.createGain(); depth.gain.value = 220;
+    this.sirenLfo.connect(depth); depth.connect(this.sirenOscillator.frequency);
+    this.sirenOscillator.connect(this.sirenGain); this.sirenOscillator.start(); this.sirenLfo.start();
+  }
+
+  setSirenVolume(volume: number): void {
+    if (this.sirenGain) this.sirenGain.gain.setTargetAtTime(Math.max(0, Math.min(.5, volume)) * this.master, this.context!.currentTime, .08);
+  }
+
+  setChaseState(chasing: boolean): void {
+    const drone = this.sounds.get('drone');
+    if (drone) drone.setVolume(this.master * (chasing ? .52 : .22));
+  }
+
   setHeartbeat(active: boolean): void {
     const sound = this.sounds.get('heartbeat');
     if (!sound?.isReady()) return;
@@ -151,6 +174,7 @@ export class AudioManager {
 
   dispose(): void {
     for (const sound of this.sounds.values()) sound.dispose();
+    this.sirenOscillator?.stop(); this.sirenLfo?.stop(); this.sirenGain?.disconnect();
     this.sounds.clear();
     if (this.ambienceTimer !== null) window.clearInterval(this.ambienceTimer);
     void this.context?.close();
