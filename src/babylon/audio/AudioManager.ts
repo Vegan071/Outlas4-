@@ -28,6 +28,7 @@ export class AudioManager {
   private context: AudioContext | null = null;
   private master = 0.7;
   private ambienceTimer: number | null = null;
+  private ambienceRequested = false;
   private footstepsActive = false;
   private runningFootsteps = false;
 
@@ -37,10 +38,14 @@ export class AudioManager {
       const volume = id === 'ambience' ? .34 : id === 'drone' ? .22 : id === 'wind' ? .2 :
         id === 'heartbeat' ? .0 : id === 'footsteps' || id === 'running' ? .42 : .75;
       try {
-        this.sounds.set(id, new Sound(id, url, scene, undefined, {
+        let sound!: Sound;
+        sound = new Sound(id, url, scene, () => {
+          if (this.ambienceRequested && ['ambience', 'drone', 'wind'].includes(id) && !sound.isPlaying) sound.play();
+        }, {
           autoplay: false, loop, volume: volume * this.master,
           spatialSound: false, distanceModel: 'linear', maxDistance: 55,
-        }));
+        });
+        this.sounds.set(id, sound);
       } catch (error) {
         console.warn('Unable to load CC0 sound:', id, error);
       }
@@ -108,6 +113,7 @@ export class AudioManager {
   }
 
   startAmbience(): void {
+    this.ambienceRequested = true;
     this.playSound('ambience');
     this.playSound('drone');
     this.playSound('wind');
