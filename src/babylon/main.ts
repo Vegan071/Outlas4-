@@ -38,7 +38,7 @@ function bootstrap(): void {
     const equipment = new FirstPersonEquipment(scene, camera, state, notes, monster, worldLayout);
     state.flashlightOn = gadgets.toggleFlashlight();
     equipment.setFlashlight(state.flashlightOn);
-    const phantom = new Phantom(scene, camera);
+    const phantom = new Phantom(scene, camera, worldLayout.terrainHeight);
     const jumpscare = new Jumpscare(scene, camera);
     const audio = new AudioManager(scene);
     const settings = new GameSettings(engine, camera, audio, pipeline, worldLayout);
