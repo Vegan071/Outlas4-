@@ -32,6 +32,7 @@ export class Monster {
     this.material.specularColor = new Color3(.08, .06, .05);
     this.mesh = MeshBuilder.CreateBox('wendigo-root', { width: .9, height: 2.8, depth: .62 }, scene);
     this.mesh.isVisible = false;
+    this.mesh.setEnabled(false);
     this.mesh.isPickable = false;
     this.mesh.position.set(0, 1.4, 0);
     const torso = MeshBuilder.CreateCapsule('wendigo-torso', { height: 2.1, radius: .42, tessellation: 8 }, scene);
@@ -64,7 +65,7 @@ export class Monster {
   spawn(player = this.player.position): void {
     const z = Math.max(-300, Math.min(300, player.z + (Math.random() > .5 ? 85 : -85)));
     this.mesh.position.set(0, this.terrainHeight(0, z) + 1.4, z);
-    this.mesh.setEnabled(true); this.mesh.isVisible = true;
+    this.mesh.setEnabled(true); this.mesh.isVisible = false;
     this.mode = 'patrol'; this.patrolWait = 0; this.pickPatrolTarget(player);
   }
 
@@ -89,7 +90,7 @@ export class Monster {
   }
 
   update(dt: number, now: number, flashlightOn: boolean, sprinting = false, playerNoise = 0): void {
-    if (!this.mesh.isVisible) return;
+    if (!this.mesh.isEnabled()) return;
     if (this.mode === 'stunned') {
       this.stunTimer -= dt;
       this.parts.leftArm.rotation.x = -1.8; this.parts.rightArm.rotation.x = -1.8;
@@ -138,7 +139,11 @@ export class Monster {
       }
     }
 
-    if (this.mode === 'ambush') { this.animate(now, 0); return; }
+    if (this.mode === 'ambush') {
+      this.mesh.position.y = this.terrainHeight(this.mesh.position.x, this.mesh.position.z) + .55;
+      this.animate(now, 0);
+      return;
+    }
     const speed = this.mode === 'chase' ? 13.8 : this.mode === 'investigate_sound' || this.mode === 'investigate_light' ? 7.4 : 4.5;
     this.move(dt, speed, this.mode === 'chase' || this.mode === 'investigate_sound' || this.mode === 'investigate_light');
     this.animate(now, speed);
