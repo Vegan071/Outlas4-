@@ -13,6 +13,8 @@ const FILES = {
   thunder: CC0 + 'ambience-thunder-04.mp3',
   footsteps: CC0 + 'footsteps-concrete-03.mp3',
   running: CC0 + 'footsteps-concrete-20.mp3',
+  gravelFootsteps: CC0 + 'footsteps-gravel-36.mp3',
+  gravelRunning: CC0 + 'footsteps-gravel-38.mp3',
   wind: CC0 + 'horror-wind-whisper-56.mp3',
   twig: CC0 + 'wood-snap-06.mp3',
 } as const;
@@ -30,15 +32,14 @@ export class AudioManager {
   private master = 0.7;
   private ambienceTimer: number | null = null;
   private ambienceRequested = false;
-  private footstepsActive = false;
-  private runningFootsteps = false;
+  private activeFootstepId: string | null = null;
   private sirenGain: GainNode | null = null;
   private sirenOscillator: OscillatorNode | null = null;
   private sirenLfo: OscillatorNode | null = null;
 
   constructor(private readonly scene: Scene) {
     for (const [id, url] of Object.entries(FILES)) {
-      const loop = ['ambience', 'drone', 'wind', 'heartbeat', 'footsteps', 'running'].includes(id);
+      const loop = ['ambience', 'drone', 'wind', 'heartbeat', 'footsteps', 'running', 'gravelFootsteps', 'gravelRunning'].includes(id);
       const volume = id === 'ambience' ? .34 : id === 'drone' ? .22 : id === 'wind' ? .2 :
         id === 'heartbeat' ? .0 : id === 'footsteps' || id === 'running' ? .42 : .75;
       try {
@@ -96,23 +97,20 @@ export class AudioManager {
     this.playFallback(event, intensity);
   }
 
-  setFootsteps(moving: boolean, running: boolean): void {
+  setFootsteps(moving: boolean, running: boolean, gravel = false): void {
     if (!moving) {
-      if (this.footstepsActive) {
-        this.stopSound(this.runningFootsteps ? 'running' : 'footsteps');
-        this.footstepsActive = false;
-      }
+      if (this.activeFootstepId) this.stopSound(this.activeFootstepId);
+      this.activeFootstepId = null;
       return;
     }
-    const id = running ? 'running' : 'footsteps';
-    if (this.footstepsActive && this.runningFootsteps === running) return;
-    if (this.footstepsActive) this.stopSound(this.runningFootsteps ? 'running' : 'footsteps');
+    const id = gravel ? (running ? 'gravelRunning' : 'gravelFootsteps') : (running ? 'running' : 'footsteps');
+    if (this.activeFootstepId === id && this.sounds.get(id)?.isPlaying) return;
+    if (this.activeFootstepId) this.stopSound(this.activeFootstepId);
     const sound = this.sounds.get(id);
-    if (!sound?.isReady()) { this.footstepsActive = false; return; }
+    if (!sound?.isReady()) { this.activeFootstepId = null; return; }
     sound.setVolume(this.master * (running ? .58 : .4));
     sound.play();
-    this.footstepsActive = true;
-    this.runningFootsteps = running;
+    this.activeFootstepId = id;
   }
 
   startSiren(): void {
