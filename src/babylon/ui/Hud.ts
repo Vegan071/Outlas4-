@@ -57,7 +57,7 @@ export class Hud {
     window.setTimeout(() => { this.flashOverlay.style.opacity = '0'; }, 130);
   }
 
-  update(state: GameState, monsterMode?: MonsterMode, monsterDistance?: number): void {
+  update(state: GameState, monsterMode?: MonsterMode, monsterDistance?: number, playerNoise = 0): void {
     if (this.counter) this.counter.textContent = 'Записки: ' + state.notesFound + ' / ' + state.totalNotes;
     const now = performance.now();
     const lines = [
@@ -71,11 +71,15 @@ export class Hud {
     if (state.radarUntil > now) lines.push('ЭМП  СКАНИРОВАНИЕ');
     const fear = monsterDistance === undefined ? 0 : Math.max(0, 1 - monsterDistance / 58);
     this.bodycamOverlay.style.opacity = String(.22 + fear * .32);
+    const noiseLabels = ['ТИХО', 'ШАГИ', 'СПРИНТ', 'ХРУСТ ВЕТКИ'];
+    lines.push('ШУМ  ' + noiseLabels[Math.max(0, Math.min(3, playerNoise))]);
     if (monsterMode) {
       const labels: Record<MonsterMode, string> = {
         patrol: 'ПАТРУЛЬ', investigate_sound: 'ИЩЕТ ВАС', investigate_light: 'ИЩЕТ СВЕТ',
         ambush: 'В ЗАСАДЕ', chase: 'ОХОТА!', stunned: 'ОСЛЕПЛЁН',
       };
+      const terror = monsterDistance === undefined ? 0 : Math.max(0, 1 - monsterDistance / 58);
+      lines.push('ПУЛЬС  ' + Math.round(72 + terror * 95) + ' BPM');
       lines.push('ВЕНДИГО  ' + labels[monsterMode] + (monsterDistance === undefined ? '' : ' · ' + Math.round(monsterDistance) + 'м'));
     }
     this.stats.textContent = lines.join('\n');
