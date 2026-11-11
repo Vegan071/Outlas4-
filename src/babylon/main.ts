@@ -130,7 +130,7 @@ function bootstrap(): void {
           const monsterDistance = monster.mesh.isEnabled() ? Vector3.Distance(camera.position, monster.mesh.position) : Infinity;
           let target: Vector3 | undefined;
           let signal = '';
-          if (monsterDistance < 100 && (state.notesFound >= 10 || !nearestNote || monsterDistance < Vector3.Distance(camera.position, nearestNote.mesh.position))) {
+          if (state.notesFound < 10 && monsterDistance < 100 && (!nearestNote || monsterDistance < Vector3.Distance(camera.position, nearestNote.mesh.position))) {
             target = monster.mesh.position;
             signal = 'КРАСНАЯ МЕТКА · ВЕНДИГО';
           } else if (state.notesFound >= 10) {
@@ -142,7 +142,13 @@ function bootstrap(): void {
           }
           if (target) {
             const delta = target.subtract(camera.position);
-            hud.notify('ЭМП: ' + signal + ' · ' + Math.round(delta.length()) + ' м · ' + (delta.x > 2 ? 'справа' : delta.x < -2 ? 'слева' : 'впереди'), 3000);
+            const forward = camera.getForwardRay().direction.clone(); forward.y = 0; forward.normalize();
+            const right = new Vector3(forward.z, 0, -forward.x);
+            const direction = delta.clone(); direction.y = 0; direction.normalize();
+            const facing = Vector3.Dot(forward, direction);
+            const side = Vector3.Dot(right, direction);
+            const bearing = facing < -.5 ? 'ПОЗАДИ' : side > .35 ? 'СПРАВА' : side < -.35 ? 'СЛЕВА' : 'ВПЕРЕДИ';
+            hud.notify('ЭМП: ' + signal + ' · ' + Math.round(delta.length()) + ' м · ' + bearing, 3000);
           } else hud.notify('ЭМП: сигнал не обнаружен');
         } else hud.notify('Радар перезаряжается');
       }
@@ -201,7 +207,7 @@ function bootstrap(): void {
       }
 
       if (grounded) camera.position.y = worldLayout.terrainHeight(camera.position.x, camera.position.z) + 1.8;
-      const note = notes.nearest(camera.position, 3.6);
+      const note = notes.nearest(camera.position, 3.6, camera.getForwardRay().direction);
       const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(-88.5, worldLayout.terrainHeight(-92, -65) + 1.6, -65)) < 4.5;
       const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, worldLayout.policeCarPosition()) < 5.5;
       hud.showInteraction(note ? '[E] Прочитать записку' : nearStation ? '[E] Включить подстанцию' : nearCar ? '[E] Уехать на полицейской машине' : '');
