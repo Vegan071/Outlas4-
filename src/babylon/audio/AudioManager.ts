@@ -36,7 +36,7 @@ export class AudioManager {
   private sirenGain: GainNode | null = null;
   private sirenOscillator: OscillatorNode | null = null;
   private sirenLfo: OscillatorNode | null = null;
-  private night = false;
+  private night: boolean | null = null;
   private chasing = false;
 
   constructor(private readonly scene: Scene) {
