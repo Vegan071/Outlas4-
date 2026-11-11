@@ -1,4 +1,4 @@
-import { Color3, Mesh, MeshBuilder, PointLight, Ray, StandardMaterial, Vector3 } from '@babylonjs/core';
+import { Color3, Mesh, MeshBuilder, PointLight, Ray, StandardMaterial, TransformNode, Vector3 } from '@babylonjs/core';
 import type { Scene } from '@babylonjs/core/scene';
 import type { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
 
@@ -45,7 +45,7 @@ export class Monster {
     darkFlesh.diffuseColor = new Color3(.055, .012, .012); darkFlesh.specularColor = new Color3(.22, .025, .02);
     const eyeBlack = new StandardMaterial('wendigo-eye-socket', scene);
     eyeBlack.diffuseColor = new Color3(.008, .002, .002);
-    const makeDetail = (mesh: Mesh, parent: Mesh | typeof this.mesh, position: Vector3, mat: StandardMaterial): Mesh => {
+    const makeDetail = (mesh: Mesh, parent: TransformNode, position: Vector3, mat: StandardMaterial): Mesh => {
       mesh.parent = parent; mesh.position.copyFrom(position); mesh.material = mat; mesh.isPickable = false; return mesh;
     };
     // Pelvis, segmented spine and exposed vertebrae.
