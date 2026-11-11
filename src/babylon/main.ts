@@ -176,8 +176,8 @@ function bootstrap(): void {
       }
 
       const note = notes.nearest(camera.position, 3.6);
-      const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(26, 1, 42)) < 4.5;
-      const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, new Vector3(0, 1, 3)) < 5.5;
+      const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(-87, 1, -61)) < 4.5;
+      const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, new Vector3(0, 1, 28)) < 5.5;
       hud.showInteraction(note ? '[E] Прочитать записку' : nearStation ? '[E] Включить подстанцию' : nearCar ? '[E] Уехать на полицейской машине' : '');
       const movedDistance = Vector3.DistanceSquared(camera.position, previousPlayerPosition);
       const isMoving = movedDistance > .0008;
