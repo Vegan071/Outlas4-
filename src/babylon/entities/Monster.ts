@@ -79,7 +79,7 @@ export class Monster {
       const scale = 1 - i * .08;
       for (const side of [-1, 1]) {
         const rib = MeshBuilder.CreateTorus('wendigo-rib-' + i + '-' + side, { diameter: .78 * scale, thickness: .045, tessellation: 10 }, scene);
-        rib.parent = this.mesh; rib.position.set(side * .055, .72 - i * .25, .08); rib.scaling.set(1, .72, .55); rib.material = bone; rib.isPickable = false;
+        rib.parent = this.mesh; rib.position.set(side * .06, 3.85 - i * .28, .02); rib.rotation.x = Math.PI / 2 + .2; rib.rotation.z = side > 0 ? -.25 : Math.PI + .25; rib.scaling.set(1, .72, .55); rib.material = bone; rib.isPickable = false;
       }
     }
     for (const side of [-1, 1]) {
