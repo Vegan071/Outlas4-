@@ -53,10 +53,11 @@ export class Monster {
     const head = new TransformNode('wendigo-head', scene);
     head.parent = this.mesh; head.position.set(0, 4.35, .28);
     const cranium = MeshBuilder.CreateSphere('wendigo-cranium', { diameter: .76, segments: 10 }, scene);
-    cranium.parent = head; cranium.scaling.set(.88, 1.15, 1.25); cranium.material = bonePlaceholder(); cranium.isPickable = false;
+    cranium.parent = head; cranium.scaling.set(.88, 1.15, 1.25); cranium.isPickable = false;
     const bone = new StandardMaterial('wendigo-bone', scene);
     bone.diffuseColor = new Color3(.8, .8, .8); bone.specularColor = new Color3(.12, .1, .08);
     bone.diffuseTexture = world.textures.monsterBone;
+    cranium.material = bone;
     const darkFlesh = new StandardMaterial('wendigo-dark-flesh', scene);
     darkFlesh.diffuseColor = new Color3(.45, .35, .3); darkFlesh.specularColor = new Color3(.22, .025, .02);
     darkFlesh.diffuseTexture = world.textures.monsterSkin;
