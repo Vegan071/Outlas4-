@@ -32,11 +32,12 @@ export class NotesManager {
     const paper = new StandardMaterial('note-paper-' + index, this.scene);
     paper.diffuseColor = new Color3(.76, .68, .48);
     paper.emissiveColor = new Color3(.08, .065, .035);
+    paper.diffuseTexture = layout.textures.notePaper;
     const card = MeshBuilder.CreatePlane('note-card-' + index, { width: .45, height: .65, sideOrientation: Mesh.DOUBLESIDE }, this.scene);
     card.parent = root; card.material = paper; card.isPickable = true;
     if (isForest) {
       const glowMat = new StandardMaterial('note-glow-mat-' + index, this.scene);
-      glowMat.emissiveColor = new Color3(.9, .72, .28); glowMat.alpha = .45;
+      glowMat.emissiveColor = new Color3(.9, .72, .28); glowMat.alpha = .45; glowMat.diffuseTexture = layout.textures.glow;
       const halo = MeshBuilder.CreateSphere('note-glow-' + index, { diameter: .32, segments: 6 }, this.scene);
       halo.parent = root; halo.position.y = .28; halo.material = glowMat; halo.isPickable = false;
       const light = new PointLight('note-light-' + index, position.add(new Vector3(0, .6, 0)), this.scene);
