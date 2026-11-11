@@ -10,7 +10,7 @@ export function createPlayer(scene: Scene, canvas: HTMLCanvasElement): Universal
   camera.speed = 0.22;
   camera.angularSensibility = 2600;
   camera.inertia = 0.72;
-  camera.applyGravity = true;
+  camera.applyGravity = false;
   camera.checkCollisions = true;
   camera.ellipsoid = new Vector3(0.42, 0.9, 0.42);
   camera.ellipsoidOffset = new Vector3(0, -0.9, 0);
@@ -18,6 +18,6 @@ export function createPlayer(scene: Scene, canvas: HTMLCanvasElement): Universal
   camera.keysDown.push(83);
   camera.keysLeft.push(65);
   camera.keysRight.push(68);
-  scene.gravity = new Vector3(0, -0.32, 0);
+  scene.gravity = new Vector3(0, -26, 0);
   return camera;
 }
