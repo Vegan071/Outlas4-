@@ -7,6 +7,7 @@ export class Hud {
   private message: HTMLDivElement;
   private stats: HTMLDivElement;
   private flashOverlay: HTMLDivElement;
+  private bodycamOverlay: HTMLDivElement;
   private hideTimer: number | undefined;
 
   constructor() {
@@ -35,6 +36,14 @@ export class Hud {
       background: '#fff', opacity: '0', transition: 'opacity 90ms linear',
     });
     document.body.append(this.flashOverlay);
+    this.bodycamOverlay = document.createElement('div');
+    this.bodycamOverlay.id = 'bodycam-overlay';
+    Object.assign(this.bodycamOverlay.style, {
+      position: 'fixed', inset: '0', zIndex: '5', pointerEvents: 'none', opacity: '.24',
+      background: 'radial-gradient(ellipse at center, transparent 48%, rgba(0,0,0,.52) 100%), repeating-linear-gradient(0deg, rgba(0,0,0,.10) 0px, rgba(0,0,0,.10) 1px, transparent 2px, transparent 4px), linear-gradient(90deg, rgba(255,0,0,.025), transparent 18%, transparent 82%, rgba(0,70,255,.025)',
+      mixBlendMode: 'multiply',
+    });
+    document.body.append(this.bodycamOverlay);
   }
 
   showInteraction(text: string): void {
@@ -60,6 +69,8 @@ export class Hud {
     if (state.radarReadyAt > now && state.radarUntil <= now) lines.push('ЭМП  ' + Math.ceil((state.radarReadyAt - now) / 1000) + 'с');
     if (state.substationPowered) lines.push('ПОДСТАНЦИЯ  ВКЛ');
     if (state.radarUntil > now) lines.push('ЭМП  СКАНИРОВАНИЕ');
+    const fear = monsterDistance === undefined ? 0 : Math.max(0, 1 - monsterDistance / 58);
+    this.bodycamOverlay.style.opacity = String(.22 + fear * .32);
     if (monsterMode) {
       const labels: Record<MonsterMode, string> = {
         patrol: 'ПАТРУЛЬ', investigate_sound: 'ИЩЕТ ВАС', investigate_light: 'ИЩЕТ СВЕТ',
