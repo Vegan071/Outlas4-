@@ -1,4 +1,4 @@
-import { Color3, Mesh, MeshBuilder, StandardMaterial, TransformNode, Vector3 } from '@babylonjs/core';
+import { Color3, Mesh, MeshBuilder, PointLight, StandardMaterial, TransformNode, Vector3 } from '@babylonjs/core';
 import type { Scene } from '@babylonjs/core/scene';
 import type { WorldLayout } from '../world/createWorld';
 
@@ -39,7 +39,7 @@ export class NotesManager {
       glowMat.emissiveColor = new Color3(.9, .72, .28); glowMat.alpha = .45;
       const halo = MeshBuilder.CreateSphere('note-glow-' + index, { diameter: .32, segments: 6 }, this.scene);
       halo.parent = root; halo.position.y = .28; halo.material = glowMat; halo.isPickable = false;
-      const light = new (awaitPointLight())('note-light-' + index, position.add(new Vector3(0, .6, 0)), this.scene);
+      const light = new PointLight('note-light-' + index, position.add(new Vector3(0, .6, 0)), this.scene);
       light.diffuse = new Color3(1, .72, .3); light.intensity = .55; light.range = 8;
       light.parent = root; light.position.set(0, .6, 0);
     }
@@ -107,8 +107,3 @@ function mulberry32(seed: number): () => number {
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
 }
-// Keep the point-light constructor in a tiny helper to avoid a large import surface.
-function awaitPointLight(): typeof import('@babylonjs/core').PointLight {
-  return requirePointLight;
-}
-import { PointLight as requirePointLight } from '@babylonjs/core';
