@@ -55,6 +55,12 @@ export class AudioManager {
     }
   }
 
+  suspend(): void {
+    this.setFootsteps(false, false); this.setHeartbeat(false); this.setSirenVolume(0);
+    for (const sound of this.sounds.values()) if (sound.isPlaying) sound.pause();
+    if (this.context?.state === 'running') void this.context.suspend();
+  }
+
   async unlock(): Promise<void> {
     if (!this.context && window.AudioContext) this.context = new window.AudioContext();
     if (this.context?.state === 'suspended') await this.context.resume();
