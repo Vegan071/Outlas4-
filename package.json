@@ -1,0 +1,20 @@
+{
+  "name": "point-of-no-return",
+  "version": "1.0.0",
+  "description": "Point of No Return: Eclipse 3D — хоррор от первого лица на Three.js",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "simplex-noise": "^4.0.3",
+    "three": "0.128.0",
+    "yuka": "^0.7.8"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}

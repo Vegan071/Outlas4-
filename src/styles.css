@@ -1,0 +1,65 @@
+:root {
+  --blood: #aa0000;
+  --ui-font: 'Courier New', Courier, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body, html {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  overflow: hidden; background: #000;
+  font-family: var(--ui-font); user-select: none;
+}
+
+canvas { display: block; }
+
+/* ---------- HUD ---------- */
+#ui-layer { position: absolute; inset: 0; pointer-events: none; z-index: 10; display: none; }
+#crosshair { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: rgba(255,255,255,.75); border-radius: 50%; transform: translate(-50%,-50%); box-shadow: 0 0 6px #000; }
+#interaction-text { position: absolute; top: 56%; left: 50%; transform: translate(-50%,-50%); color: #ffeedd; font-size: 19px; text-shadow: 2px 2px 4px #000; background: rgba(0,0,0,.75); padding: 7px 16px; border-radius: 4px; border: 1px solid #886644; display: none; font-weight: bold; }
+#note-counter { position: absolute; top: 20px; left: 20px; color: #fff; font-size: 24px; text-shadow: 2px 2px 4px #000; font-weight: bold; }
+#fps-counter { position: absolute; top: 52px; left: 20px; color: #77ff77; font-size: 14px; text-shadow: 1px 1px 2px #000; font-weight: bold; }
+#substation-status { position: absolute; top: 74px; left: 20px; color: #ffaa44; font-size: 14px; text-shadow: 1px 1px 2px #000; font-weight: bold; }
+#system-msg { position: absolute; top: 102px; left: 50%; transform: translateX(-50%); color: #ff3333; font-size: 22px; text-shadow: 2px 2px 6px #000; opacity: 0; transition: opacity .6s; font-weight: bold; text-align: center; background: rgba(15,0,0,.78); padding: 8px 22px; border-radius: 6px; border: 1px solid #660000; max-width: 80vw; }
+
+#cam-rec { position: absolute; top: 20px; right: 25px; color: #eee; font-size: 18px; letter-spacing: 2px; text-shadow: 1px 1px 3px #000; display: flex; align-items: center; gap: 10px; }
+#rec-dot { width: 12px; height: 12px; background: #ff1111; border-radius: 50%; box-shadow: 0 0 10px #f00; animation: blink 1s infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .15; } }
+
+#hud-bottom-left { position: absolute; bottom: 22px; left: 22px; color: #ccc; font-size: 14px; text-shadow: 1px 1px 2px #000; line-height: 1.6; background: rgba(0,0,0,.62); padding: 10px 16px; border-left: 3px solid var(--blood); border-radius: 4px; }
+#pulse-text { color: #ff5555; font-weight: bold; font-size: 17px; }
+#radar-msg { position: absolute; bottom: 135px; left: 50%; transform: translateX(-50%); color: #66ffcc; font-size: 18px; text-shadow: 0 0 8px #0fc; background: rgba(0,20,15,.85); border: 1px solid #0a8; padding: 8px 20px; border-radius: 6px; opacity: 0; transition: opacity .4s; text-align: center; }
+#note-lore-box { position: absolute; bottom: 195px; left: 50%; transform: translateX(-50%); color: #ffeedd; font-size: 18px; background: rgba(20,15,10,.9); border: 1px solid #864; padding: 14px 24px; border-radius: 6px; opacity: 0; transition: opacity .5s; max-width: min(640px, 90vw); text-align: center; font-style: italic; box-shadow: 0 0 25px rgba(0,0,0,.9); }
+
+/* ---------- Оверлеи ---------- */
+#blood-overlay { position: absolute; inset: 0; background: radial-gradient(circle, transparent 15%, rgba(160,0,0,.92) 100%); opacity: 0; pointer-events: none; z-index: 15; transition: opacity .1s; }
+#flash-overlay { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 16; transition: opacity .15s; }
+#vhs-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 12; background: repeating-linear-gradient(0deg, rgba(0,0,0,.11) 0, rgba(0,0,0,.11) 1px, transparent 1px, transparent 3px), radial-gradient(circle, transparent 60%, rgba(0,0,0,.72) 100%); }
+#fear-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 13; box-shadow: inset 0 0 110px rgba(190,0,0,.85); opacity: 0; transition: opacity .2s; }
+#glitch-text { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); color: #f22; font-size: 28px; font-weight: bold; letter-spacing: 4px; text-shadow: -3px 0 #0ff, 3px 0 #f05; display: none; z-index: 14; pointer-events: none; white-space: nowrap; }
+
+/* ---------- Меню ---------- */
+#menu { position: absolute; inset: 0; background: rgba(4,4,6,.96); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; z-index: 20; pointer-events: auto; overflow-y: auto; padding: 20px; }
+h1 { font-size: 3.2rem; color: #b11; text-transform: uppercase; letter-spacing: 6px; margin: 0 0 8px; text-shadow: 0 0 20px rgba(255,0,0,.5); text-align: center; }
+p { font-size: 1.05rem; color: #ccc; line-height: 1.5; text-align: center; max-width: 780px; margin: 0 0 16px; }
+
+.controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; margin-bottom: 16px; background: rgba(255,255,255,.05); padding: 14px 22px; border-radius: 10px; border: 1px solid #333; text-align: left; }
+.controls-grid div { font-size: .95rem; }
+.key { display: inline-block; background: #222; padding: 3px 9px; margin-right: 3px; border-radius: 4px; border: 1px solid #777; color: #fc0; font-weight: bold; min-width: 22px; text-align: center; }
+
+.settings-bar { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: center; margin-bottom: 14px; background: rgba(40,10,10,.45); padding: 12px 20px; border-radius: 8px; border: 1px solid #522; }
+.settings-bar label { font-size: .92rem; color: #ddd; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.settings-bar input:disabled { cursor: not-allowed; }
+
+#menu-note { min-height: 1.3em; margin-bottom: 10px; color: #fa6; font-size: .9rem; text-align: center; }
+
+.btn-row { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
+.action-btn { padding: 14px 34px; font-size: 1.25rem; background: #300; color: #fff; border: 2px solid var(--blood); cursor: pointer; font-family: inherit; transition: all .25s; font-weight: bold; text-transform: uppercase; border-radius: 6px; }
+.action-btn:hover, .action-btn:focus-visible { background: var(--blood); box-shadow: 0 0 25px #f00; transform: scale(1.04); outline: none; }
+
+#error-box { display: none; position: absolute; inset: 0; z-index: 50; background: #000; color: #f66; align-items: center; justify-content: center; text-align: center; padding: 30px; font-size: 1.1rem; line-height: 1.6; }
+
+@media (max-width: 720px) {
+  h1 { font-size: 2rem; letter-spacing: 3px; }
+  .controls-grid { grid-template-columns: 1fr; }
+}
