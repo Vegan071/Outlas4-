@@ -93,6 +93,8 @@ export class FirstPersonEquipment {
     this.drawIdle(0);
   }
 
+  setVisible(visible: boolean): void { this.root.setEnabled(visible); }
+
   setFlashlight(on: boolean): void {
     const mat = this.flashlightLens.material as StandardMaterial;
     mat.emissiveColor = on ? new Color3(.9, .85, .65) : Color3.Black();
