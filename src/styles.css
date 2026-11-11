@@ -74,3 +74,28 @@ p { font-size: 1.05rem; color: #ccc; line-height: 1.5; text-align: center; max-w
   .settings-bar { flex-direction: column; align-items: stretch; width: min(92vw, 460px); }
   .settings-bar label { justify-content: space-between; }
 }
+
+/* Babylon HUD / bodycam elements */
+#babylon-message { font-family: var(--ui-font); line-height: 1.5; box-shadow: 0 0 22px rgba(0,0,0,.75); }
+#babylon-stats { min-width: 205px; border-radius: 4px; text-shadow: 1px 1px 2px #000; }
+#bodycam-recording { animation: ponr-rec-blink 1s steps(2,end) infinite; }
+#bodycam-glitch-text { animation: ponr-glitch .12s steps(2,end) infinite; }
+#bodycam-overlay { will-change: opacity; }
+#blood-overlay-babylon { mix-blend-mode: multiply; }
+#flashbang-overlay { mix-blend-mode: screen; }
+@keyframes ponr-rec-blink { 50% { opacity: .25; } }
+@keyframes ponr-glitch {
+  0% { transform: translate(-50%,-50%) translateX(0); }
+  25% { transform: translate(-50%,-50%) translateX(2px); }
+  50% { transform: translate(-50%,-50%) translateX(-2px); }
+  100% { transform: translate(-50%,-50%) translateX(0); }
+}
+.settings-bar input[type="range"] { accent-color: #aa0000; width: 130px; cursor: pointer; }
+.settings-bar input[type="checkbox"] { accent-color: #aa0000; width: 16px; height: 16px; }
+.menu-hint { font-size: .9rem; color: #aaa; margin: 0 0 12px; }
+@media (max-width: 720px) {
+  .settings-bar { flex-direction: column; align-items: stretch; width: min(92vw, 460px); }
+  .settings-bar label { justify-content: space-between; }
+  #babylon-stats { left: 8px; bottom: 8px; font-size: 11px; padding: 6px 8px; }
+  #bodycam-recording { top: 8px; right: 8px; font-size: 12px; }
+}
