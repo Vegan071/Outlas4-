@@ -83,7 +83,7 @@ function bootstrap(): void {
       if (layer) layer.style.display = 'none';
     };
     const startGame = (): void => {
-      if (state.phase === 'won' || state.phase === 'lost') window.location.reload();
+      if (state.phase === 'won' || state.phase === 'lost') { save.clear(); window.location.reload(); return; }
       state.phase = 'playing';
       if (menu) menu.style.display = 'none';
       if (layer) layer.style.display = 'block';
