@@ -148,6 +148,10 @@ export class Monster {
     };
     const leftArm = createArm(-1), rightArm = createArm(1);
     const leftLeg = createLeg(-1), rightLeg = createLeg(1);
+    const heart = MeshBuilder.CreatePolyhedron('wendigo-heart', { type: 2, size: .22 }, scene);
+    const heartMat = new StandardMaterial('wendigo-heart-material', scene);
+    heartMat.diffuseColor = new Color3(.45, .005, .012); heartMat.emissiveColor = new Color3(.65, .005, .01);
+    heart.parent = this.mesh; heart.position.set(0, 3.25, .16); heart.material = heartMat; heart.isPickable = false;
     this.parts = { head, jaw, leftArm: leftArm.root, rightArm: rightArm.root, leftLeg: leftLeg.root, rightLeg: rightLeg.root, leftArmJoint: leftArm.joint, rightArmJoint: rightArm.joint, leftLegJoint: leftLeg.joint, rightLegJoint: rightLeg.joint, heart };
     this.initSteering(world);
     for (const side of [-1, 1]) {
