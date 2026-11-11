@@ -13,6 +13,7 @@ export interface WorldLayout {
   cars: WorldCar[];
   terrainHeight: (x: number, z: number) => number;
   updateAtmosphere: (delta: number, progress: number, player: Vector3) => void;
+  activateSubstation: () => void;
 }
 
 const POI = {
@@ -194,6 +195,13 @@ export function createWorld(scene: Scene): WorldLayout {
   const lever = makeBox(scene, 'substation-switch', .45, .14, .14, 3.55, 1.6, 0, leverMat); lever.parent = station;
   const stationLight = new PointLight('substation-light', new Vector3(4.2, 2.4, 0), scene);
   stationLight.parent = station; stationLight.diffuse = new Color3(1, .03, .01); stationLight.intensity = 2.5; stationLight.range = 18;
+  let substationPowered = false;
+  const activateSubstation = (): void => {
+    substationPowered = true;
+    leverMat.diffuseColor = new Color3(.02, .9, .18);
+    stationLight.diffuse = new Color3(.02, 1, .12);
+    stationLight.intensity = 3.5;
+  };
 
   // POI: tall wireframe radio mast with a blinking beacon.
   const towerRoot = new TransformNode('radio-tower-root', scene);
@@ -279,7 +287,7 @@ export function createWorld(scene: Scene): WorldLayout {
       const mat = mesh.material as StandardMaterial | null;
       if (mat) mat.diffuseColor.copyFrom(bulb);
     }
-    for (const light of streetLights) light.intensity = (p > .98 ? 3.5 : 3.5 * p);
+    for (const light of streetLights) light.intensity = (substationPowered ? 6.8 : 3.5) * p;
     ash.position.set(player.x, terrainHeight(player.x, player.z), player.z);
     for (let i = 0; i < ashState.length; i++) {
       const particle = ashState[i];
@@ -290,5 +298,5 @@ export function createWorld(scene: Scene): WorldLayout {
     ash.thinInstanceBufferUpdated('matrix');
   };
 
-  return { trees, houses, cars, terrainHeight, updateAtmosphere };
+  return { trees, houses, cars, terrainHeight, updateAtmosphere, activateSubstation };
 }
