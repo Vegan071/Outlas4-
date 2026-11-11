@@ -219,7 +219,8 @@ function bootstrap(): void {
       if (isMoving && canSprint && Math.abs(camera.position.x) > 38 && twigCooldown <= 0 && Math.random() < .25) {
         playerNoise = 3; twigCooldown = 4; audio.playEvent('twig', .85);
       }
-      audio.setFootsteps(isMoving, canSprint);
+      const inForest = Math.abs(camera.position.x) > 38 || Math.abs(camera.position.z) > 210;
+      audio.setFootsteps(isMoving, canSprint, inForest);
       equipment.update(dt, now, isMoving, canSprint, camera.position, camera.getForwardRay().direction);
       monster.update(dt, now, state.flashlightOn, canSprint, playerNoise);
       if (monster.mode !== lastMonsterMode) {
