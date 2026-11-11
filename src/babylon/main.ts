@@ -22,10 +22,10 @@ function fatal(message: string): void {
 function bootstrap(): void {
   try {
     const { engine, scene, canvas } = createEngine();
-    createWorld(scene);
+    const worldLayout = createWorld(scene);
     const camera = createPlayer(scene, canvas);
     const state = createGameState();
-    const notes = new NotesManager(scene);
+    const notes = new NotesManager(scene, worldLayout);
     const gadgets = new Gadgets(scene, camera, state);
     const monster = new Monster(scene, camera);
     const phantom = new Phantom(scene, camera);
@@ -138,7 +138,7 @@ function bootstrap(): void {
         } else if (!state.substationPowered && Vector3.Distance(camera.position, new Vector3(-87, 1, -61)) < 4.5) {
           state.substationPowered = true;
           hud.notify('Подстанция запущена. Зарядка гаджетов ускорена.');
-        } else if (state.notesFound >= 10 && Vector3.Distance(camera.position, new Vector3(0, 1, 28)) < 5.5) {
+        } else if (state.notesFound >= 10 && Vector3.Distance(camera.position, new Vector3(0, 1, 3)) < 5.5) {
           state.phase = 'won';
           showMenu('Вы спаслись', 'Играть снова');
         }
@@ -177,7 +177,7 @@ function bootstrap(): void {
 
       const note = notes.nearest(camera.position, 3.6);
       const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(-87, 1, -61)) < 4.5;
-      const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, new Vector3(0, 1, 28)) < 5.5;
+      const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, new Vector3(0, 1, 3)) < 5.5;
       hud.showInteraction(note ? '[E] Прочитать записку' : nearStation ? '[E] Включить подстанцию' : nearCar ? '[E] Уехать на полицейской машине' : '');
       const movedDistance = Vector3.DistanceSquared(camera.position, previousPlayerPosition);
       const isMoving = movedDistance > .0008;
