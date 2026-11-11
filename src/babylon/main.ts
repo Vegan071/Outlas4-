@@ -85,6 +85,7 @@ function bootstrap(): void {
     const startGame = (): void => {
       if (state.phase === 'won' || state.phase === 'lost') { save.clear(); window.location.reload(); return; }
       state.phase = 'playing';
+      hud.setBlood(0); hud.setGlitch(false);
       if (menu) menu.style.display = 'none';
       if (layer) layer.style.display = 'block';
       canvas.requestPointerLock?.();
@@ -103,6 +104,7 @@ function bootstrap(): void {
     });
 
     document.addEventListener('keydown', (e) => {
+      if (jumpscare.active) { e.preventDefault(); return; }
       if (e.code === 'Escape' && state.phase === 'playing') {
         state.phase = 'paused';
         showMenu('Пауза', 'Продолжить');
@@ -248,11 +250,16 @@ function bootstrap(): void {
       audio.setHeartbeat(monster.mesh.isEnabled() && distance < 18);
       if (!jumpscare.active && monster.mode === 'chase' && distance < 2.3) {
         jumpscare.start();
+        equipment.setVisible(false);
+        hud.setBlood(1);
+        hud.setGlitch(true, 'СИГНАЛ ПОТЕРЯН // ФАТАЛЬНАЯ ОШИБКА');
+        hud.showInteraction('');
         audio.playEvent('jumpscare', 1);
         monster.mesh.setEnabled(false);
       }
       if (jumpscare.active && jumpscare.update(dt) && !scareResolved) {
         scareResolved = true;
+        hud.setGlitch(false);
         state.health = 0;
         state.phase = 'lost';
         showMenu('Вендиго настиг вас', 'Попробовать снова', true);
@@ -262,7 +269,7 @@ function bootstrap(): void {
         showMenu('Вы погибли', 'Попробовать снова');
       }
       if (now > flashPulseUntil) { /* flash pulse is intentionally brief */ }
-      hud.update(state, monster.mesh.isEnabled() ? monster.mode : undefined, monster.mesh.isEnabled() ? Vector3.Distance(camera.position, monster.mesh.position) : undefined, playerNoise);
+      hud.update(state, monster.mesh.isEnabled() ? monster.mode : undefined, monster.mesh.isEnabled() ? Vector3.Distance(camera.position, monster.mesh.position) : undefined, playerNoise, elapsed);
     });
 
     engine.runRenderLoop(() => scene.render());
