@@ -146,7 +146,7 @@ export function createWorld(scene: Scene): WorldLayout {
     const root = new TransformNode('abandoned-car-' + i, scene);
     root.position.set(x, destroyed ? -.08 : 0, z); root.rotation.y = rotation;
     const paint = material(scene, 'car-paint-' + i, destroyed ? new Color3(.04, .04, .04) : CAR_COLORS[i]);
-    makeBox(scene, 'car-body-' + i, 1.75, .68, 4.3, 0, .62, 0, paint).parent = root;
+    const carBody = makeBox(scene, 'car-body-' + i, 1.75, .68, 4.3, 0, .62, 0, paint, true); carBody.parent = root; carBody.isPickable = true;
     makeBox(scene, 'car-cabin-' + i, 1.52, .55, 2.15, 0, 1.2, -.15, paint).parent = root;
     makeBox(scene, 'car-windows-' + i, 1.54, .42, 1.85, 0, 1.22, -.15, glass).parent = root;
     makeBox(scene, 'car-grille-' + i, 1.1, .25, .08, 0, .65, 2.13, black).parent = root;
@@ -210,7 +210,7 @@ export function createWorld(scene: Scene): WorldLayout {
   const towerRoot = new TransformNode('radio-tower-root', scene);
   towerRoot.position.set(POI.tower.x, terrainHeight(POI.tower.x, POI.tower.z), POI.tower.z);
   const tower = MeshBuilder.CreateCylinder('radio-tower', { height: 68, diameterTop: 1.2, diameterBottom: 9, tessellation: 4, subdivisions: 14 }, scene);
-  tower.parent = towerRoot; tower.position.y = 34; tower.material = material(scene, 'tower-wireframe', new Color3(.22, .16, .12)); (tower.material as StandardMaterial).wireframe = true;
+  tower.parent = towerRoot; tower.position.y = 34; tower.material = material(scene, 'tower-wireframe', new Color3(.22, .16, .12)); (tower.material as StandardMaterial).wireframe = true; tower.checkCollisions = true;
   const beaconMat = material(scene, 'radio-beacon-mat', new Color3(1, .01, .005));
   const beacon = MeshBuilder.CreateSphere('radio-beacon', { diameter: 1.7, segments: 8 }, scene);
   beacon.parent = towerRoot; beacon.position.y = 68.5; beacon.material = beaconMat;
@@ -234,7 +234,7 @@ export function createWorld(scene: Scene): WorldLayout {
   // Extraction vehicle, unlocked after all ten clues are recovered.
   const policeCar = new TransformNode('police-car', scene);
   policeCar.position.set(0, 0, 3); policeCar.setEnabled(false);
-  makeBox(scene, 'police-car-body', 2.1, .8, 4.4, 0, .8, 0, material(scene, 'police-car-paint', new Color3(.75, .76, .72))).parent = policeCar;
+  const policeBody = makeBox(scene, 'police-car-body', 2.1, .8, 4.4, 0, .8, 0, material(scene, 'police-car-paint', new Color3(.75, .76, .72)), true); policeBody.parent = policeCar; policeBody.isPickable = true;
   makeBox(scene, 'police-car-roof', 1.75, .65, 2.1, 0, 1.5, -.15, glass).parent = policeCar;
   makeBox(scene, 'police-car-stripe', 2.12, .18, 4.42, 0, .82, 0, material(scene, 'police-car-stripe-mat', new Color3(.04, .12, .55))).parent = policeCar;
   const lightbar = makeBox(scene, 'police-lightbar', 1.4, .15, .4, 0, 1.6, -.2, black); lightbar.parent = policeCar;
