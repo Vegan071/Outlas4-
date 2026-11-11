@@ -245,6 +245,7 @@ function bootstrap(): void {
       const distance = Vector3.Distance(monster.mesh.position, camera.position);
       bodycam.setFear(monster.mesh.isEnabled() ? Math.max(0, 1 - distance / 58) * .85 : 0);
       gadgets.updateFlashlight(monster.mesh.isEnabled() && distance < 22);
+      audio.setHeartbeat(monster.mesh.isEnabled() && distance < 18);
       if (!jumpscare.active && monster.mode === 'chase' && distance < 2.3) {
         jumpscare.start();
         audio.playEvent('jumpscare', 1);
