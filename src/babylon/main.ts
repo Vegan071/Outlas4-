@@ -193,6 +193,7 @@ function bootstrap(): void {
       elapsed += dt;
       const dayProgress = Math.min(elapsed / 45, 1);
       const isNight = dayProgress >= 1;
+      audio.setNightState(isNight);
       worldLayout.updateAtmosphere(dt, dayProgress, camera.position);
       gadgets.update(dt, now);
       if (isNight && !monsterSpawned) { monster.spawn(camera.position); monsterSpawned = true; audio.playEvent('roar', .7); }
