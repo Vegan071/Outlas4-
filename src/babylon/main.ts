@@ -39,7 +39,7 @@ function bootstrap(): void {
     const phantom = new Phantom(scene, camera);
     const jumpscare = new Jumpscare(scene, camera);
     const audio = new AudioManager(scene);
-    const settings = new GameSettings(engine, camera, audio, pipeline);
+    const settings = new GameSettings(engine, camera, audio, pipeline, worldLayout);
     const assets = new AssetLoader(scene);
     const save = new SaveManager();
     const hud = new Hud();
