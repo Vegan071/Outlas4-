@@ -12,6 +12,8 @@ All listed files are served from SFXMint and are dedicated to the public domain 
 | Monster vocal | [Distant Monster Growl 11](https://sfxmint.com/sounds/horror-growl-11) |
 | Walking | [Walking Footsteps On Concrete 03](https://sfxmint.com/sounds/footsteps-concrete-03) |
 | Running | [Running Footsteps On Concrete 20](https://sfxmint.com/sounds/footsteps-concrete-20) |
+| Walking in forest | [Slow Crunching Footsteps On Gravel 36](https://sfxmint.com/sounds/footsteps-gravel-36) |
+| Running in forest | [Running Footsteps On Gravel 38](https://sfxmint.com/sounds/footsteps-gravel-38) |
 | Wind / whispers | [Breathy Through Cracks Whisper-Like Wind 56](https://sfxmint.com/sounds/horror-wind-whisper-56) |
 | Branch snap | [Small Twig Wood Snap 06](https://sfxmint.com/sounds/wood-snap-06) |
 | Thunder | [Rolling Thunder Rumble 04](https://sfxmint.com/sounds/ambience-thunder-04) |
