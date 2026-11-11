@@ -241,6 +241,7 @@ function bootstrap(): void {
 
       audio.setSirenVolume(worldLayout.updatePoliceCar(now, camera.position));
       const distance = Vector3.Distance(monster.mesh.position, camera.position);
+      gadgets.updateFlashlight(monster.mesh.isEnabled() && distance < 22);
       if (!jumpscare.active && monster.mode === 'chase' && distance < 2.3) {
         jumpscare.start();
         audio.playEvent('jumpscare', 1);
