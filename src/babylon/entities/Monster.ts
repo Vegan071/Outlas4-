@@ -21,7 +21,11 @@ export class Monster {
   private patrolWait = 0;
   private chaseUntil = 0;
   private lastPerception = 0;
-  private readonly parts: { head: Mesh; jaw: Mesh; leftArm: Mesh; rightArm: Mesh; leftLeg: Mesh; rightLeg: Mesh; heart: Mesh };
+  private readonly parts: {
+    head: TransformNode; jaw: Mesh; leftArm: TransformNode; rightArm: TransformNode;
+    leftLeg: TransformNode; rightLeg: TransformNode; leftArmJoint: TransformNode; rightArmJoint: TransformNode;
+    leftLegJoint: TransformNode; rightLegJoint: TransformNode; heart: Mesh;
+  };
   private readonly material: StandardMaterial;
   private readonly terrainHeight: (x: number, z: number) => number;
   private manager!: YUKA.EntityManager;
@@ -39,15 +43,17 @@ export class Monster {
     this.material.diffuseColor = new Color3(.12, .095, .075);
     this.material.specularColor = new Color3(.08, .06, .05);
     this.material.diffuseTexture = world.textures.monsterSkin;
-    this.mesh = MeshBuilder.CreateBox('wendigo-root', { width: .9, height: 2.8, depth: .62 }, scene);
+    this.mesh = MeshBuilder.CreateBox('wendigo-root', { width: 1.2, height: 5.8, depth: .8 }, scene);
     this.mesh.isVisible = false;
     this.mesh.setEnabled(false);
     this.mesh.isPickable = false;
-    this.mesh.position.set(0, 1.4, 0);
-    const torso = MeshBuilder.CreateCapsule('wendigo-torso', { height: 2.1, radius: .42, tessellation: 8 }, scene);
-    torso.parent = this.mesh; torso.position.y = .1; torso.material = this.material; torso.isPickable = false;
-    const head = MeshBuilder.CreateSphere('wendigo-head', { diameter: .72, segments: 8 }, scene);
-    head.parent = this.mesh; head.position.set(0, 1.45, .04); head.material = this.material; head.isPickable = false;
+    this.mesh.position.set(0, 0, 0);
+    const torso = MeshBuilder.CreateCylinder('wendigo-torso', { height: 1.9, diameterTop: .68, diameterBottom: .44, tessellation: 8 }, scene);
+    torso.parent = this.mesh; torso.position.set(0, 3.1, .02); torso.rotation.x = .18; torso.material = this.material; torso.isPickable = false;
+    const head = new TransformNode('wendigo-head', scene);
+    head.parent = this.mesh; head.position.set(0, 4.35, .28);
+    const cranium = MeshBuilder.CreateSphere('wendigo-cranium', { diameter: .76, segments: 10 }, scene);
+    cranium.parent = head; cranium.scaling.set(.88, 1.15, 1.25); cranium.material = bonePlaceholder(); cranium.isPickable = false;
     const bone = new StandardMaterial('wendigo-bone', scene);
     bone.diffuseColor = new Color3(.8, .8, .8); bone.specularColor = new Color3(.12, .1, .08);
     bone.diffuseTexture = world.textures.monsterBone;
@@ -60,11 +66,11 @@ export class Monster {
       mesh.parent = parent; mesh.position.copyFrom(position); mesh.material = mat; mesh.isPickable = false; return mesh;
     };
     // Pelvis, segmented spine and exposed vertebrae.
-    makeDetail(MeshBuilder.CreateCylinder('wendigo-pelvis', { height: .48, diameterTop: .7, diameterBottom: .52, tessellation: 8 }, scene), this.mesh, new Vector3(0, -.72, -.04), bone);
+    makeDetail(MeshBuilder.CreateCylinder('wendigo-pelvis', { height: .48, diameterTop: .7, diameterBottom: .52, tessellation: 8 }, scene), this.mesh, new Vector3(0, 2.0, -.05), bone);
     for (let i = 0; i < 9; i++) {
-      const t = i / 8, y = -.48 + t * 1.72, z = -.08 - Math.sin(t * Math.PI) * .2 + t * .12;
+      const t = i / 8, y = 2.15 + t * 2.1, z = -.1 - Math.sin(t * Math.PI) * .25 + t * .25;
       makeDetail(MeshBuilder.CreateCylinder('wendigo-vertebra-' + i, { height: .24, diameterTop: .32, diameterBottom: .36, tessellation: 7 }, scene), this.mesh, new Vector3(0, y, z), bone).rotation.x = .22;
-      const spike = makeDetail(MeshBuilder.CreateCylinder('wendigo-spine-spike-' + i, { height: .35 + Math.sin(t * Math.PI) * .45, diameterTop: 0, diameterBottom: .12, tessellation: 5 }, scene), this.mesh, new Vector3(0, y + .04, z - .23), bone);
+      const spike = makeDetail(MeshBuilder.CreateCylinder('wendigo-spine-spike-' + i, { height: .35 + Math.sin(t * Math.PI) * .45, diameterTop: 0, diameterBottom: .12, tessellation: 5 }, scene), this.mesh, new Vector3(0, y + .05, z - .22), bone);
       spike.rotation.x = Math.PI / 2.3;
     }
     // Rib cage, shoulders and bony protrusions.
@@ -76,17 +82,17 @@ export class Monster {
       }
     }
     for (const side of [-1, 1]) {
-      const shoulder = makeDetail(MeshBuilder.CreatePolyhedron('wendigo-shoulder-' + side, { type: 2, size: .34 }, scene), this.mesh, new Vector3(side * .64, .42, .08), this.material);
+      const shoulder = makeDetail(MeshBuilder.CreatePolyhedron('wendigo-shoulder-' + side, { type: 2, size: .34 }, scene), this.mesh, new Vector3(side * .65, 4.05, .08), this.material);
       shoulder.rotation.z = side * .18;
-      const shoulderSpike = makeDetail(MeshBuilder.CreateCylinder('wendigo-shoulder-spike-' + side, { height: .55, diameterTop: 0, diameterBottom: .16, tessellation: 5 }, scene), this.mesh, new Vector3(side * .72, .82, .02), bone);
+      const shoulderSpike = makeDetail(MeshBuilder.CreateCylinder('wendigo-shoulder-spike-' + side, { height: .55, diameterTop: 0, diameterBottom: .16, tessellation: 5 }, scene), this.mesh, new Vector3(side * .72, 4.38, .02), bone);
       shoulderSpike.rotation.z = -side * .45;
     }
     // Long muzzle, dark sockets, extra teeth and branching antlers.
     const snout = MeshBuilder.CreateCylinder('wendigo-snout', { height: .65, diameterTop: .28, diameterBottom: .48, tessellation: 7 }, scene);
-    snout.parent = head; snout.position.set(0, -.04, .42); snout.rotation.x = Math.PI / 2 + .15; snout.material = bone; snout.isPickable = false;
+    snout.parent = head; snout.position.set(0, -.04, .48); snout.rotation.x = Math.PI / 2 + .15; snout.material = bone; snout.isPickable = false;
     for (const side of [-1, 1]) {
       const socket = MeshBuilder.CreateSphere('wendigo-eye-socket-' + side, { diameter: .22, segments: 7 }, scene);
-      socket.parent = head; socket.position.set(side * .17, .05, .28); socket.material = eyeBlack; socket.isPickable = false;
+      socket.parent = head; socket.position.set(side * .17, .08, .36); socket.material = eyeBlack; socket.isPickable = false;
       const antlerRoot = new TransformNode('wendigo-antler-' + side, scene);
       antlerRoot.parent = head; antlerRoot.position.set(side * .22, .32, -.05);
       const beam = MeshBuilder.CreateCylinder('wendigo-antler-beam-' + side, { height: 1.15, diameterTop: .06, diameterBottom: .14, tessellation: 6 }, scene);
@@ -102,32 +108,46 @@ export class Monster {
     }
     // Glowing exposed heart and chest light.
     const heartLight = new PointLight('wendigo-heart-light', Vector3.Zero(), scene);
-    heartLight.parent = this.mesh; heartLight.position.set(0, .1, .48); heartLight.diffuse = new Color3(1, .005, .02); heartLight.intensity = 1.8; heartLight.range = 7.5;
+    heartLight.parent = this.mesh; heartLight.position.set(0, 3.25, .35); heartLight.diffuse = new Color3(1, .005, .02); heartLight.intensity = 1.8; heartLight.range = 7.5;
     const jaw = MeshBuilder.CreateBox('wendigo-jaw', { width: .42, height: .16, depth: .3 }, scene);
     jaw.parent = head; jaw.position.set(0, -.25, .18); jaw.material = this.material; jaw.isPickable = false;
-    const makeLimb = (name: string, x: number, y: number, length: number, width: number) => {
-      const limb = MeshBuilder.CreateCapsule(name, { height: length, radius: width, tessellation: 6 }, scene);
-      limb.parent = this.mesh; limb.position.set(x, y, 0); limb.material = this.material; limb.isPickable = false; return limb;
-    };
-    const leftArm = makeLimb('wendigo-left-arm', -.58, .42, 1.65, .14);
-    const rightArm = makeLimb('wendigo-right-arm', .58, .42, 1.65, .14);
-    const leftLeg = makeLimb('wendigo-left-leg', -.23, -.95, 1.5, .17);
-    const rightLeg = makeLimb('wendigo-right-leg', .23, -.95, 1.5, .17);
-    for (const side of [-1, 1]) {
-      const arm = side < 0 ? leftArm : rightArm;
-      const leg = side < 0 ? leftLeg : rightLeg;
-      for (let claw = -1; claw <= 1; claw++) {
-        const handClaw = MeshBuilder.CreateCylinder('wendigo-hand-claw-' + side + '-' + claw, { height: .28, diameterTop: 0, diameterBottom: .055, tessellation: 5 }, scene);
-        handClaw.parent = arm; handClaw.position.set(claw * .09, -.72, .12); handClaw.rotation.x = Math.PI / 2.2; handClaw.material = bone; handClaw.isPickable = false;
-        const footClaw = MeshBuilder.CreateCylinder('wendigo-foot-claw-' + side + '-' + claw, { height: .22, diameterTop: 0, diameterBottom: .06, tessellation: 5 }, scene);
-        footClaw.parent = leg; footClaw.position.set(claw * .09, -.7, .18); footClaw.rotation.x = Math.PI / 2.2; footClaw.material = bone; footClaw.isPickable = false;
+    const createArm = (side: number): { root: TransformNode; joint: TransformNode } => {
+      const root = new TransformNode('wendigo-arm-root-' + side, scene);
+      root.parent = this.mesh; root.position.set(side * .72, 4.0, .08);
+      const upper = MeshBuilder.CreateCylinder('wendigo-upper-arm-' + side, { height: 1.55, diameterTop: .18, diameterBottom: .26, tessellation: 7 }, scene);
+      upper.parent = root; upper.position.y = -.75; upper.material = this.material; upper.isPickable = false;
+      const elbowSpike = MeshBuilder.CreateCylinder('wendigo-elbow-spike-' + side, { height: .35, diameterTop: 0, diameterBottom: .1, tessellation: 5 }, scene);
+      elbowSpike.parent = root; elbowSpike.position.set(0, -1.5, -.14); elbowSpike.rotation.x = -Math.PI / 1.4; elbowSpike.material = bone; elbowSpike.isPickable = false;
+      const joint = new TransformNode('wendigo-arm-lower-' + side, scene);
+      joint.parent = root; joint.position.y = -1.5; joint.rotation.x = -.35;
+      const forearm = MeshBuilder.CreateCylinder('wendigo-forearm-' + side, { height: 1.65, diameterTop: .14, diameterBottom: .18, tessellation: 7 }, scene);
+      forearm.parent = joint; forearm.position.y = -.82; forearm.material = this.material; forearm.isPickable = false;
+      const hand = MeshBuilder.CreateBox('wendigo-hand-' + side, { width: .18, height: .22, depth: .12 }, scene);
+      hand.parent = joint; hand.position.y = -1.68; hand.material = darkFlesh; hand.isPickable = false;
+      for (let claw = -1.5; claw <= 1.5; claw += 1) {
+        const talon = MeshBuilder.CreateCylinder('wendigo-hand-talon-' + side + '-' + claw, { height: .68, diameterTop: 0, diameterBottom: .056, tessellation: 5 }, scene);
+        talon.parent = joint; talon.position.set(claw * .045, -2.08, .08); talon.rotation.x = Math.PI - .22; talon.material = bone; talon.isPickable = false;
       }
-    }
-    const heart = MeshBuilder.CreateSphere('wendigo-heart', { diameter: .18, segments: 6 }, scene);
-    const heartMat = new StandardMaterial('wendigo-heart-material', scene);
-    heartMat.diffuseColor = new Color3(.45, .005, .012); heartMat.emissiveColor = new Color3(.65, .005, .01);
-    heart.parent = this.mesh; heart.position.set(0, .1, .38); heart.material = heartMat; heart.isPickable = false;
-    this.parts = { head, jaw, leftArm, rightArm, leftLeg, rightLeg, heart };
+      return { root, joint };
+    };
+    const createLeg = (side: number): { root: TransformNode; joint: TransformNode } => {
+      const root = new TransformNode('wendigo-leg-root-' + side, scene);
+      root.parent = this.mesh; root.position.set(side * .32, 2.05, -.05);
+      const thigh = MeshBuilder.CreateCylinder('wendigo-thigh-' + side, { height: 1.15, diameterTop: .36, diameterBottom: .22, tessellation: 7 }, scene);
+      thigh.parent = root; thigh.position.set(0, -.55, .12); thigh.rotation.x = -.25; thigh.material = this.material; thigh.isPickable = false;
+      const joint = new TransformNode('wendigo-leg-lower-' + side, scene);
+      joint.parent = root; joint.position.set(0, -1.05, .25);
+      const shin = MeshBuilder.CreateCylinder('wendigo-shin-' + side, { height: 1.15, diameterTop: .2, diameterBottom: .14, tessellation: 7 }, scene);
+      shin.parent = joint; shin.position.set(0, -.5, -.12); shin.rotation.x = .22; shin.material = bone; shin.isPickable = false;
+      for (let claw = -1; claw <= 1; claw++) {
+        const talon = MeshBuilder.CreateCylinder('wendigo-foot-talon-' + side + '-' + claw, { height: .35, diameterTop: 0, diameterBottom: .07, tessellation: 4 }, scene);
+        talon.parent = joint; talon.position.set(claw * .07, -1.0, .08); talon.rotation.x = Math.PI / 2; talon.material = bone; talon.isPickable = false;
+      }
+      return { root, joint };
+    };
+    const leftArm = createArm(-1), rightArm = createArm(1);
+    const leftLeg = createLeg(-1), rightLeg = createLeg(1);
+    this.parts = { head, jaw, leftArm: leftArm.root, rightArm: rightArm.root, leftLeg: leftLeg.root, rightLeg: rightLeg.root, leftArmJoint: leftArm.joint, rightArmJoint: rightArm.joint, leftLegJoint: leftLeg.joint, rightLegJoint: rightLeg.joint, heart };
     this.initSteering(world);
     for (const side of [-1, 1]) {
       const eyeMat = new StandardMaterial('wendigo-eye-' + side, scene);
@@ -161,7 +181,7 @@ export class Monster {
 
   spawn(player = this.player.position): void {
     const z = Math.max(-300, Math.min(300, player.z + (Math.random() > .5 ? 85 : -85)));
-    this.mesh.position.set(0, this.terrainHeight(0, z) + 2.0, z);
+    this.mesh.position.set(0, this.terrainHeight(0, z), z);
     this.vehicle.position.set(0, 0, z); this.vehicle.velocity.set(0, 0, 0);
     this.mesh.setEnabled(true); this.mesh.isVisible = false;
     this.mode = 'patrol'; this.patrolWait = 0; this.pickPatrolTarget(player);
@@ -180,7 +200,7 @@ export class Monster {
 
   private hasLineOfSight(distance: number, range: number): boolean {
     if (distance > range) return false;
-    const origin = this.mesh.position.add(new Vector3(0, 3.0, 0));
+    const origin = this.mesh.position.add(new Vector3(0, 4.8, 0));
     const direction = this.player.position.subtract(origin).normalize();
     const ray = new Ray(origin, direction, distance);
     const hit = this.scene.pickWithRay(ray, mesh => mesh.isEnabled() && mesh.checkCollisions && mesh !== this.mesh && mesh.name !== 'terrain' && mesh.name !== 'main-road');
@@ -238,7 +258,7 @@ export class Monster {
     }
 
     if (this.mode === 'ambush') {
-      this.mesh.position.y = this.terrainHeight(this.mesh.position.x, this.mesh.position.z) + 1.15;
+      this.mesh.position.y = this.terrainHeight(this.mesh.position.x, this.mesh.position.z) - .85;
       this.animate(now, 0);
       return;
     }
@@ -260,7 +280,7 @@ export class Monster {
     this.manager.update(dt);
     const velocity = this.vehicle.velocity;
     if (velocity.x * velocity.x + velocity.z * velocity.z > .05) direction.set(velocity.x, 0, velocity.z).normalize();
-    const origin = this.mesh.position.add(new Vector3(0, .8, 0));
+    const origin = this.mesh.position.add(new Vector3(0, 1.2, 0));
     const hit = this.scene.pickWithRay(new Ray(origin, direction, 4.5), mesh => mesh.isEnabled() && mesh.checkCollisions && mesh !== this.mesh);
     if (hit?.hit) {
       const left = new Vector3(-direction.z, 0, direction.x);
@@ -270,7 +290,7 @@ export class Monster {
       direction = (leftHit?.distance ?? 999) > (rightHit?.distance ?? 999) ? left : right;
     }
     this.mesh.position.addInPlace(direction.scale(speed * dt));
-    this.mesh.position.y = this.terrainHeight(this.mesh.position.x, this.mesh.position.z) + (this.mode === 'ambush' ? 1.15 : 2.0) + Math.sin(performance.now() * .004) * .035;
+    this.mesh.position.y = this.terrainHeight(this.mesh.position.x, this.mesh.position.z) + (this.mode === 'ambush' ? -.85 : 0) + Math.sin(performance.now() * .004) * .035;
     const desired = Math.atan2(direction.x, direction.z);
     let delta = desired - this.mesh.rotation.y;
     while (delta > Math.PI) delta -= Math.PI * 2;
@@ -286,6 +306,10 @@ export class Monster {
     this.parts.rightArm.rotation.x = Math.sin(t + Math.PI) * swing;
     this.parts.leftLeg.rotation.x = Math.sin(t + Math.PI) * swing;
     this.parts.rightLeg.rotation.x = Math.sin(t) * swing;
+    this.parts.leftArmJoint.rotation.x = -.35 + Math.sin(t + Math.PI) * .25;
+    this.parts.rightArmJoint.rotation.x = -.35 + Math.sin(t) * .25;
+    this.parts.leftLegJoint.rotation.x = Math.sin(t) * .18;
+    this.parts.rightLegJoint.rotation.x = Math.sin(t + Math.PI) * .18;
     this.parts.head.rotation.z = chasing ? Math.sin(t * 2) * .18 : this.mode === 'ambush' ? .35 : 0;
     this.parts.jaw.rotation.x = chasing ? Math.abs(Math.sin(t * 4)) * .42 : .1;
     this.parts.heart.scaling.setAll(1 + Math.sin(now * .012) * .2);
