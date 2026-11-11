@@ -13,7 +13,7 @@ export function createPlayer(scene: Scene, canvas: HTMLCanvasElement): Universal
   camera.applyGravity = true;
   camera.checkCollisions = true;
   camera.ellipsoid = new Vector3(0.42, 0.9, 0.42);
-  camera.ellipsoidOffset = new Vector3(0, 0.9, 0);
+  camera.ellipsoidOffset = new Vector3(0, -0.9, 0);
   camera.keysUp.push(87);
   camera.keysDown.push(83);
   camera.keysLeft.push(65);
