@@ -156,11 +156,9 @@ function bootstrap(): void {
       if (state.phase !== 'playing') { audio.setFootsteps(false, false); audio.setHeartbeat(false); return; }
 
       elapsed += dt;
-      const isNight = elapsed > 45;
-      const ambient = scene.getLightByName('night-ambient');
-      if (ambient) ambient.intensity = isNight ? .22 : .52;
-      scene.fogDensity = isNight ? .011 : .0045;
-      scene.fogColor = isNight ? new Color3(.018, .025, .04) : new Color3(.12, .105, .09);
+      const dayProgress = Math.min(elapsed / 45, 1);
+      const isNight = dayProgress >= 1;
+      worldLayout.updateAtmosphere(dt, dayProgress, camera.position);
       if (isNight && !monsterSpawned) { monster.spawn(camera.position); monsterSpawned = true; audio.playEvent('roar', .7); }
 
       const canSprint = sprinting && state.stamina > 0;
