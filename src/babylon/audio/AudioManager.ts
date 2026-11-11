@@ -3,7 +3,7 @@ import type { Scene } from '@babylonjs/core/scene';
 
 const CC0 = 'https://sfxmint.com/dl/';
 const FILES = {
-  ambience: CC0 + 'horror-ambience-dark-50.mp3',
+  ambience: CC0 + 'horror-ambience-dark-39.mp3',
   drone: CC0 + 'horror-drone-25.mp3',
   stinger: CC0 + 'horror-stinger-54.mp3',
   flash: CC0 + 'office-camera-08.mp3',
@@ -12,7 +12,7 @@ const FILES = {
   growl: CC0 + 'horror-growl-11.mp3',
   thunder: CC0 + 'ambience-thunder-04.mp3',
   footsteps: CC0 + 'footsteps-concrete-03.mp3',
-  running: CC0 + 'footsteps-concrete-20.mp3',
+  running: CC0 + 'footsteps-concrete-64.mp3',
   gravelFootsteps: CC0 + 'footsteps-gravel-36.mp3',
   gravelRunning: CC0 + 'footsteps-gravel-38.mp3',
   wind: CC0 + 'horror-wind-whisper-56.mp3',
