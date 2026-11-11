@@ -23,7 +23,6 @@ export class Phantom {
       this.cooldown -= dt;
       if (this.cooldown > 0 || (Math.abs(player.x) <= 40 && Math.abs(player.z) <= 40)) return false;
       const forward = this.camera.getForwardRay().direction.clone(); forward.y = 0; forward.normalize();
-      forward.rotateByQuaternionToRef(this.camera.rotationQuaternion ?? this.camera.getDirection(Vector3.Forward()).toQuaternion(), forward);
       const angle = (Math.random() - .5) * 1.1;
       const c = Math.cos(angle), s = Math.sin(angle);
       const x = forward.x * c - forward.z * s, z = forward.x * s + forward.z * c;
