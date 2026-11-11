@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { BodycamShader } from '../shaders/bodycam.js';
+import { LookControls } from './look.js';
 import { PLAYER } from '../config.js';
 import { ctx, game, settings } from '../state.js';
 
@@ -14,7 +14,7 @@ const FAR_LOWSPEC = 200;
 
 const pixelRatio = () => (game.lowSpec ? 1.0 : Math.min(window.devicePixelRatio, 1.35));
 
-/** Создаёт сцену, камеру, рендерер, постпроцессинг и PointerLockControls. Бросает исключение, если нет WebGL. */
+/** Создаёт сцену, камеру, рендерер, постпроцессинг и контролы взгляда. Бросает исключение, если нет WebGL. */
 export function createRenderer() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(SUNSET);
@@ -38,7 +38,7 @@ export function createRenderer() {
   const bodycamPass = new ShaderPass(BodycamShader);
   composer.addPass(bodycamPass);
 
-  const controls = new PointerLockControls(camera, document.body);
+  const controls = new LookControls(camera, document.body);
   scene.add(controls.getObject());
 
   Object.assign(ctx, { scene, camera, renderer, composer, bloomPass, bodycamPass, controls });

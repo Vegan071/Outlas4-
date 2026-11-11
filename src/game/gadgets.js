@@ -1,7 +1,7 @@
 // Гаджеты игрока: фонарик, ЭМП-импульс, фотовспышка.
 
 import * as THREE from 'three';
-import { FLASHBANG, FLASHLIGHT_INTENSITY, RADAR_COOLDOWN } from '../config.js';
+import { FLASHBANG, FLASHLIGHT_INTENSITY, RADAR } from '../config.js';
 import { ai, ctx, game, getPlayer, world } from '../state.js';
 import { playSound } from '../core/audio.js';
 import { lights } from '../world/lighting.js';
@@ -30,10 +30,14 @@ export function toggleFlashlight() {
   setFlashlight(!game.flashlightOn);
 }
 
-/** Показывает направление и расстояние до ближайшей записки (или до полицейской машины в конце) */
+/**
+ * Включает экран ЭМП-радара на RADAR.DURATION секунд и показывает направление и расстояние
+ * до ближайшей записки (или до полицейской машины в конце). Потом — перезарядка.
+ */
 export function triggerRadarPing() {
-  if (!canAct() || game.radarCooldown > 0) return;
-  game.radarCooldown = RADAR_COOLDOWN;
+  if (!canAct() || game.radarActive > 0 || game.radarCooldown > 0) return;
+  game.radarActive = RADAR.DURATION;
+  hud.setRadarStatus(game.radarActive, 0);
   playSound('radar');
 
   const player = getPlayer();
@@ -91,9 +95,14 @@ export function triggerFlashbang() {
 /** Перезарядка гаджетов (с включённой подстанцией — вдвое быстрее) */
 export function updateGadgets(delta) {
   const rate = game.substationPowered ? delta * 2 : delta;
-  if (game.radarCooldown > 0) {
+  if (game.radarActive > 0) {
+    // экран работает в реальном времени; перезарядка стартует, когда он погас
+    game.radarActive = Math.max(0, game.radarActive - delta);
+    if (game.radarActive === 0) game.radarCooldown = RADAR.COOLDOWN;
+    hud.setRadarStatus(game.radarActive, game.radarCooldown);
+  } else if (game.radarCooldown > 0) {
     game.radarCooldown = Math.max(0, game.radarCooldown - rate);
-    hud.setRadarStatus(game.radarCooldown);
+    hud.setRadarStatus(0, game.radarCooldown);
   }
   if (game.flashbangCooldown > 0) {
     game.flashbangCooldown = Math.max(0, game.flashbangCooldown - rate);

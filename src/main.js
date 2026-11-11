@@ -3,7 +3,6 @@ import { loadSettings } from './core/settings.js';
 import { generateProceduralTextures } from './core/textures.js';
 import { createRenderer } from './core/renderer.js';
 import { initInput } from './core/input.js';
-import { initLook } from './core/look.js';
 import { setupLights } from './world/lighting.js';
 import { initMenu } from './ui/menu.js';
 import { ctx } from './state.js';
@@ -34,7 +33,6 @@ function bootstrap() {
   setupLights();
 
   initMenu({ onPrimary: startOrResume });
-  initLook();
 
   initInput({
     jump,

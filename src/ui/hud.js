@@ -118,9 +118,20 @@ export function setFlashlightStatus(on) {
   el.flashlight.style.color = on ? '#ffcc44' : '#88aa88';
 }
 
-export function setRadarStatus(cooldown) {
-  el.radar.innerText = cooldown > 0 ? `ИМПУЛЬС (${Math.ceil(cooldown)}с)` : 'АКТИВЕН';
-  el.radar.style.color = cooldown > 0 ? '#ff8844' : '#66ffcc';
+export function setRadarStatus(active, cooldown) {
+  let text = 'ГОТОВ';
+  let color = '#66ffcc';
+  if (active > 0) {
+    text = `ВКЛ (${Math.ceil(active)}с)`;
+    color = '#ffffff';
+  } else if (cooldown > 0) {
+    text = `ПЕРЕЗАРЯДКА (${Math.ceil(cooldown)}с)`;
+    color = '#ff8844';
+  }
+  if (last.radar === text) return; // не трогаем DOM каждый кадр
+  last.radar = text;
+  el.radar.innerText = text;
+  el.radar.style.color = color;
 }
 
 export function setFlashbangStatus(cooldown) {
