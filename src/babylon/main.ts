@@ -96,7 +96,7 @@ function bootstrap(): void {
       if (state.phase !== 'playing' || e.repeat) return;
       const now = performance.now();
       if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') sprinting = true;
-      if (e.code === 'Space' && grounded) { jumpVelocity = 6.4; grounded = false; e.preventDefault(); }
+      if (e.code === 'Space' && grounded) { jumpVelocity = 10.8; grounded = false; e.preventDefault(); }
       if (e.code === 'KeyF') {
         state.flashlightOn = gadgets.toggleFlashlight();
         hud.notify(state.flashlightOn ? 'Фонарик включён — Вендиго может заметить свет' : 'Фонарик выключен');
@@ -124,7 +124,8 @@ function bootstrap(): void {
         } else hud.notify('Радар перезаряжается');
       }
       if (e.code === 'KeyE') {
-        const note = notes.nearest(camera.position, 3.6);
+        if (grounded) camera.position.y = worldLayout.terrainHeight(camera.position.x, camera.position.z) + 1.8;
+      const note = notes.nearest(camera.position, 3.6);
         if (note) {
           hud.notify(notes.collect(note), 5200);
           audio.playEvent('twig', .2);
@@ -164,13 +165,14 @@ function bootstrap(): void {
       const canSprint = sprinting && state.stamina > 0;
       if (canSprint) state.stamina = Math.max(0, state.stamina - dt * 25);
       else state.stamina = Math.min(100, state.stamina + dt * (state.substationPowered ? 22 : 15));
-      camera.speed = canSprint ? .39 : .22;
+      camera.speed = canSprint ? 20 : 7.8;
 
       // Explicit jump arc is layered over Babylon's collision-enabled first-person camera.
       if (!grounded || jumpVelocity > 0) {
-        jumpVelocity -= 15 * dt;
+        jumpVelocity -= 26 * dt;
         camera.position.y += jumpVelocity * dt;
-        if (camera.position.y <= 1.8) { camera.position.y = 1.8; jumpVelocity = 0; grounded = true; }
+        const floorY = worldLayout.terrainHeight(camera.position.x, camera.position.z) + 1.8;
+        if (camera.position.y <= floorY) { camera.position.y = floorY; jumpVelocity = 0; grounded = true; }
       }
 
       const note = notes.nearest(camera.position, 3.6);
