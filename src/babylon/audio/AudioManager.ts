@@ -7,6 +7,8 @@ const FILES = {
   drone: CC0 + 'horror-drone-25.mp3',
   stinger: CC0 + 'horror-stinger-54.mp3',
   flash: CC0 + 'office-camera-08.mp3',
+  pickup: CC0 + 'paper-fabric-page-turn-33.mp3',
+  switch: CC0 + 'ui-toggle-54.mp3',
   heartbeat: CC0 + 'horror-heartbeat-73.mp3',
   creak: CC0 + 'horror-creak-61.mp3',
   growl: CC0 + 'horror-growl-11.mp3',
@@ -19,7 +21,7 @@ const FILES = {
   twig: CC0 + 'wood-snap-06.mp3',
 } as const;
 
-type EventName = 'step' | 'twig' | 'roar' | 'whisper' | 'heartbeat' | 'flash' | 'jumpscare' | 'siren' | 'thunder' | 'creak';
+type EventName = 'step' | 'twig' | 'roar' | 'whisper' | 'heartbeat' | 'flash' | 'jumpscare' | 'siren' | 'pickup' | 'switch' | 'thunder' | 'creak';
 
 /**
  * CC0 sound library integration.
@@ -87,7 +89,7 @@ export class AudioManager {
   playEvent(event: EventName, intensity = 1): void {
     const ids: Record<EventName, string> = {
       step: 'footsteps', twig: 'twig', roar: 'growl', whisper: 'wind',
-      heartbeat: 'heartbeat', flash: 'flash', jumpscare: 'stinger', siren: '',
+      heartbeat: 'heartbeat', flash: 'flash', jumpscare: 'stinger', pickup: 'pickup', switch: 'switch', siren: '',
       thunder: 'thunder', creak: 'creak',
     };
     const id = ids[event];
