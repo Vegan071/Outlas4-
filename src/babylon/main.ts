@@ -210,7 +210,7 @@ function bootstrap(): void {
         if (camera.position.y <= floorY) { camera.position.y = floorY; jumpVelocity = 0; grounded = true; }
       }
 
-      if (grounded) camera.position.y = worldLayout.terrainHeight(camera.position.x, camera.position.z) + 1.8;
+      if (grounded) camera.position.y = worldLayout.terrainHeight(camera.position.x, camera.position.z) + 2.0;
       const note = notes.nearest(camera.position, 3.6, camera.getForwardRay().direction);
       const nearStation = !state.substationPowered && Vector3.Distance(camera.position, new Vector3(-88.5, worldLayout.terrainHeight(-92, -65) + 1.6, -65)) < 4.5;
       const nearCar = state.notesFound >= 10 && Vector3.Distance(camera.position, worldLayout.policeCarPosition()) < 5.5;
