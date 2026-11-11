@@ -1,4 +1,4 @@
-import { Color3, Mesh, MeshBuilder, Ray, StandardMaterial, Vector3 } from '@babylonjs/core';
+import { Color3, Mesh, MeshBuilder, PointLight, Ray, StandardMaterial, Vector3 } from '@babylonjs/core';
 import type { Scene } from '@babylonjs/core/scene';
 import type { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
 
@@ -39,6 +39,59 @@ export class Monster {
     torso.parent = this.mesh; torso.position.y = .1; torso.material = this.material; torso.isPickable = false;
     const head = MeshBuilder.CreateSphere('wendigo-head', { diameter: .72, segments: 8 }, scene);
     head.parent = this.mesh; head.position.set(0, 1.45, .04); head.material = this.material; head.isPickable = false;
+    const bone = new StandardMaterial('wendigo-bone', scene);
+    bone.diffuseColor = new Color3(.42, .37, .29); bone.specularColor = new Color3(.12, .1, .08);
+    const darkFlesh = new StandardMaterial('wendigo-dark-flesh', scene);
+    darkFlesh.diffuseColor = new Color3(.055, .012, .012); darkFlesh.specularColor = new Color3(.22, .025, .02);
+    const eyeBlack = new StandardMaterial('wendigo-eye-socket', scene);
+    eyeBlack.diffuseColor = new Color3(.008, .002, .002);
+    const makeDetail = (mesh: Mesh, parent: Mesh | typeof this.mesh, position: Vector3, mat: StandardMaterial): Mesh => {
+      mesh.parent = parent; mesh.position.copyFrom(position); mesh.material = mat; mesh.isPickable = false; return mesh;
+    };
+    // Pelvis, segmented spine and exposed vertebrae.
+    makeDetail(MeshBuilder.CreateCylinder('wendigo-pelvis', { height: .48, diameterTop: .7, diameterBottom: .52, tessellation: 8 }, scene), this.mesh, new Vector3(0, -.72, -.04), bone);
+    for (let i = 0; i < 9; i++) {
+      const t = i / 8, y = -.48 + t * 1.72, z = -.08 - Math.sin(t * Math.PI) * .2 + t * .12;
+      makeDetail(MeshBuilder.CreateCylinder('wendigo-vertebra-' + i, { height: .24, diameterTop: .32, diameterBottom: .36, tessellation: 7 }, scene), this.mesh, new Vector3(0, y, z), bone).rotation.x = .22;
+      const spike = makeDetail(MeshBuilder.CreateCylinder('wendigo-spine-spike-' + i, { height: .35 + Math.sin(t * Math.PI) * .45, diameterTop: 0, diameterBottom: .12, tessellation: 5 }, scene), this.mesh, new Vector3(0, y + .04, z - .23), bone);
+      spike.rotation.x = Math.PI / 2.3;
+    }
+    // Rib cage, shoulders and bony protrusions.
+    for (let i = 0; i < 5; i++) {
+      const scale = 1 - i * .08;
+      for (const side of [-1, 1]) {
+        const rib = MeshBuilder.CreateTorus('wendigo-rib-' + i + '-' + side, { diameter: .78 * scale, thickness: .045, tessellation: 10 }, scene);
+        rib.parent = this.mesh; rib.position.set(side * .055, .72 - i * .25, .08); rib.scaling.set(1, .72, .55); rib.material = bone; rib.isPickable = false;
+      }
+    }
+    for (const side of [-1, 1]) {
+      const shoulder = makeDetail(MeshBuilder.CreatePolyhedron('wendigo-shoulder-' + side, { type: 2, size: .34 }, scene), this.mesh, new Vector3(side * .64, .42, .08), this.material);
+      shoulder.rotation.z = side * .18;
+      const shoulderSpike = makeDetail(MeshBuilder.CreateCylinder('wendigo-shoulder-spike-' + side, { height: .55, diameterTop: 0, diameterBottom: .16, tessellation: 5 }, scene), this.mesh, new Vector3(side * .72, .82, .02), bone);
+      shoulderSpike.rotation.z = -side * .45;
+    }
+    // Long muzzle, dark sockets, extra teeth and branching antlers.
+    const snout = MeshBuilder.CreateCylinder('wendigo-snout', { height: .65, diameterTop: .28, diameterBottom: .48, tessellation: 7 }, scene);
+    snout.parent = head; snout.position.set(0, -.04, .42); snout.rotation.x = Math.PI / 2 + .15; snout.material = bone; snout.isPickable = false;
+    for (const side of [-1, 1]) {
+      const socket = MeshBuilder.CreateSphere('wendigo-eye-socket-' + side, { diameter: .22, segments: 7 }, scene);
+      socket.parent = head; socket.position.set(side * .17, .05, .28); socket.material = eyeBlack; socket.isPickable = false;
+      const antlerRoot = new TransformNode('wendigo-antler-' + side, scene);
+      antlerRoot.parent = head; antlerRoot.position.set(side * .22, .32, -.05);
+      const beam = MeshBuilder.CreateCylinder('wendigo-antler-beam-' + side, { height: 1.15, diameterTop: .06, diameterBottom: .14, tessellation: 6 }, scene);
+      beam.parent = antlerRoot; beam.position.set(side * .25, .48, -.15); beam.rotation.set(-.3, 0, -side * .48); beam.material = darkFlesh; beam.isPickable = false;
+      const tineA = MeshBuilder.CreateCylinder('wendigo-antler-tine-a-' + side, { height: .65, diameterTop: 0, diameterBottom: .08, tessellation: 5 }, scene);
+      tineA.parent = antlerRoot; tineA.position.set(side * .35, .55, .12); tineA.rotation.z = -side * .3; tineA.material = bone; tineA.isPickable = false;
+      const tineB = MeshBuilder.CreateCylinder('wendigo-antler-tine-b-' + side, { height: .75, diameterTop: 0, diameterBottom: .07, tessellation: 5 }, scene);
+      tineB.parent = antlerRoot; tineB.position.set(side * .52, .88, -.1); tineB.rotation.z = -side * .65; tineB.material = bone; tineB.isPickable = false;
+      for (let i = -3; i <= 3; i++) {
+        const fang = MeshBuilder.CreateCylinder('wendigo-fang-' + side + '-' + i, { height: .14, diameterTop: 0, diameterBottom: .05, tessellation: 4 }, scene);
+        fang.parent = head; fang.position.set(i * .045, -.18, .55 - Math.abs(i) * .04); fang.rotation.x = Math.PI; fang.material = bone; fang.isPickable = false;
+      }
+    }
+    // Glowing exposed heart and chest light.
+    const heartLight = new PointLight('wendigo-heart-light', Vector3.Zero(), scene);
+    heartLight.parent = this.mesh; heartLight.position.set(0, .1, .48); heartLight.diffuse = new Color3(1, .005, .02); heartLight.intensity = 1.8; heartLight.range = 7.5;
     const jaw = MeshBuilder.CreateBox('wendigo-jaw', { width: .42, height: .16, depth: .3 }, scene);
     jaw.parent = head; jaw.position.set(0, -.25, .18); jaw.material = this.material; jaw.isPickable = false;
     const makeLimb = (name: string, x: number, y: number, length: number, width: number) => {
